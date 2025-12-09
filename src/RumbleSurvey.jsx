@@ -518,13 +518,16 @@ const SwipeableCard = ({ question, onChoice, currentIndex }) => {
   // Minimum swipe distance to trigger action
   const minSwipeDistance = 80;
 
+  // Threshold to distinguish tap from drag
+  const dragThreshold = 10;
+
   const onTouchStart = (e) => {
     setTouchEnd(null);
     setTouchStart({
       x: e.targetTouches[0].clientX,
       y: e.targetTouches[0].clientY
     });
-    setIsDragging(true);
+    // Don't set isDragging yet - wait to see if they actually move
   };
 
   const onTouchMove = (e) => {
@@ -532,15 +535,27 @@ const SwipeableCard = ({ question, onChoice, currentIndex }) => {
 
     const currentX = e.targetTouches[0].clientX;
     const currentY = e.targetTouches[0].clientY;
+    const deltaX = currentX - touchStart.x;
+    const deltaY = currentY - touchStart.y;
+
+    // Only start "dragging" mode if moved beyond threshold
+    if (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold) {
+      setIsDragging(true);
+    }
 
     setTouchEnd({ x: currentX, y: currentY });
-    setSwipeOffset({
-      x: currentX - touchStart.x,
-      y: currentY - touchStart.y
-    });
+    setSwipeOffset({ x: deltaX, y: deltaY });
   };
 
   const onTouchEnd = () => {
+    // If we weren't dragging (just a tap), let click events handle it
+    if (!isDragging) {
+      setTouchStart(null);
+      setTouchEnd(null);
+      setSwipeOffset({ x: 0, y: 0 });
+      return;
+    }
+
     if (!touchStart || !touchEnd) {
       setIsDragging(false);
       setSwipeOffset({ x: 0, y: 0 });
