@@ -1,23 +1,23 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Trophy, MapPin, User, Check, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 
-// --- DATA: NEW RANDOM BLOCKS (SEE RUMBLE_CBC_DESIGN_README) ---
+// --- DATA: NEW RANDOM BLOCKS WITH INVALID MEMBERSHIP DEALS REMOVED (SEE RUMBLE_CBC_DESIGN_README) ---
 // Note: Prices converted from "P_269" format to integer 269 for consistency
 const RAW_DATA = [
   {
     "id": 1,
     "options": [
       {
-        "price": 129,
-        "count": "C_4",
-        "booking": "B_7D",
-        "guest": "G_1Q",
-        "perks": "P_5P"
-      },
-      {
         "price": 229,
         "count": "C_Unl",
         "booking": "B_14D",
+        "guest": "G_None",
+        "perks": "P_5P"
+      },
+      {
+        "price": 189,
+        "count": "C_Unl",
+        "booking": "B_10D",
         "guest": "G_None",
         "perks": "P_15P"
       }
@@ -27,15 +27,15 @@ const RAW_DATA = [
     "id": 2,
     "options": [
       {
-        "price": 189,
-        "count": "C_Unl",
-        "booking": "B_7D",
-        "guest": "G_None",
-        "perks": "P_10P"
+        "price": 229,
+        "count": "C_8",
+        "booking": "B_30D",
+        "guest": "G_2M",
+        "perks": "P_5P"
       },
       {
-        "price": 129,
-        "count": "C_Unl",
+        "price": 269,
+        "count": "C_4",
         "booking": "B_7D",
         "guest": "G_1M",
         "perks": "P_None"
@@ -47,15 +47,15 @@ const RAW_DATA = [
     "options": [
       {
         "price": 229,
-        "count": "C_4",
-        "booking": "B_14D",
+        "count": "C_Unl",
+        "booking": "B_10D",
         "guest": "G_1M",
         "perks": "P_10P"
       },
       {
         "price": 269,
-        "count": "C_8",
-        "booking": "B_30D",
+        "count": "C_Unl",
+        "booking": "B_10D",
         "guest": "G_1M",
         "perks": "P_5P"
       }
@@ -65,16 +65,16 @@ const RAW_DATA = [
     "id": 4,
     "options": [
       {
-        "price": 229,
-        "count": "C_8",
-        "booking": "B_7D",
-        "guest": "G_None",
-        "perks": "P_10P"
+        "price": 189,
+        "count": "C_12",
+        "booking": "B_14D",
+        "guest": "G_2M",
+        "perks": "P_5P"
       },
       {
         "price": 129,
-        "count": "C_12",
-        "booking": "B_30D",
+        "count": "C_8",
+        "booking": "B_14D",
         "guest": "G_1M",
         "perks": "P_5P"
       }
@@ -84,18 +84,18 @@ const RAW_DATA = [
     "id": 5,
     "options": [
       {
-        "price": 129,
+        "price": 229,
         "count": "C_8",
-        "booking": "B_14D",
+        "booking": "B_10D",
         "guest": "G_2M",
         "perks": "P_15P"
       },
       {
         "price": 229,
         "count": "C_12",
-        "booking": "B_7D",
-        "guest": "G_None",
-        "perks": "P_5P"
+        "booking": "B_30D",
+        "guest": "G_2M",
+        "perks": "P_None"
       }
     ]
   },
@@ -103,17 +103,17 @@ const RAW_DATA = [
     "id": 6,
     "options": [
       {
-        "price": 189,
-        "count": "C_12",
+        "price": 129,
+        "count": "C_8",
         "booking": "B_10D",
         "guest": "G_1M",
         "perks": "P_15P"
       },
       {
-        "price": 269,
-        "count": "C_8",
-        "booking": "B_7D",
-        "guest": "G_2M",
+        "price": 229,
+        "count": "C_12",
+        "booking": "B_30D",
+        "guest": "G_1M",
         "perks": "P_10P"
       }
     ]
@@ -123,14 +123,14 @@ const RAW_DATA = [
     "options": [
       {
         "price": 129,
-        "count": "C_12",
-        "booking": "B_7D",
-        "guest": "G_1Q",
+        "count": "C_4",
+        "booking": "B_30D",
+        "guest": "G_None",
         "perks": "P_10P"
       },
       {
-        "price": 129,
-        "count": "C_Unl",
+        "price": 229,
+        "count": "C_12",
         "booking": "B_10D",
         "guest": "G_1Q",
         "perks": "P_None"
@@ -141,18 +141,18 @@ const RAW_DATA = [
     "id": 8,
     "options": [
       {
-        "price": 129,
+        "price": 269,
         "count": "C_Unl",
-        "booking": "B_14D",
+        "booking": "B_7D",
         "guest": "G_2M",
         "perks": "P_10P"
       },
       {
         "price": 269,
-        "count": "C_4",
-        "booking": "B_10D",
-        "guest": "G_None",
-        "perks": "P_5P"
+        "count": "C_Unl",
+        "booking": "B_30D",
+        "guest": "G_2M",
+        "perks": "P_None"
       }
     ]
   },
@@ -161,15 +161,15 @@ const RAW_DATA = [
     "options": [
       {
         "price": 189,
-        "count": "C_8",
+        "count": "C_4",
         "booking": "B_7D",
         "guest": "G_1Q",
         "perks": "P_None"
       },
       {
         "price": 229,
-        "count": "C_Unl",
-        "booking": "B_10D",
+        "count": "C_4",
+        "booking": "B_7D",
         "guest": "G_2M",
         "perks": "P_15P"
       }
@@ -180,14 +180,14 @@ const RAW_DATA = [
     "options": [
       {
         "price": 129,
-        "count": "C_12",
-        "booking": "B_30D",
+        "count": "C_8",
+        "booking": "B_14D",
         "guest": "G_1Q",
         "perks": "P_15P"
       },
       {
-        "price": 269,
-        "count": "C_8",
+        "price": 229,
+        "count": "C_4",
         "booking": "B_14D",
         "guest": "G_1Q",
         "perks": "P_5P"
@@ -199,15 +199,15 @@ const RAW_DATA = [
     "options": [
       {
         "price": 129,
-        "count": "C_8",
-        "booking": "B_14D",
+        "count": "C_4",
+        "booking": "B_10D",
         "guest": "G_None",
         "perks": "P_15P"
       },
       {
         "price": 189,
-        "count": "C_Unl",
-        "booking": "B_14D",
+        "count": "C_4",
+        "booking": "B_30D",
         "guest": "G_1M",
         "perks": "P_15P"
       }
@@ -217,16 +217,16 @@ const RAW_DATA = [
     "id": 12,
     "options": [
       {
-        "price": 229,
+        "price": 269,
         "count": "C_4",
-        "booking": "B_7D",
-        "guest": "G_None",
-        "perks": "P_15P"
+        "booking": "B_30D",
+        "guest": "G_2M",
+        "perks": "P_10P"
       },
       {
-        "price": 229,
-        "count": "C_Unl",
-        "booking": "B_10D",
+        "price": 129,
+        "count": "C_8",
+        "booking": "B_7D",
         "guest": "G_1M",
         "perks": "P_None"
       }
@@ -236,16 +236,16 @@ const RAW_DATA = [
     "id": 13,
     "options": [
       {
-        "price": 229,
-        "count": "C_12",
-        "booking": "B_7D",
-        "guest": "G_1Q",
+        "price": 129,
+        "count": "C_4",
+        "booking": "B_30D",
+        "guest": "G_None",
         "perks": "P_5P"
       },
       {
-        "price": 129,
-        "count": "C_4",
-        "booking": "B_10D",
+        "price": 229,
+        "count": "C_Unl",
+        "booking": "B_7D",
         "guest": "G_1Q",
         "perks": "P_15P"
       }
@@ -256,15 +256,15 @@ const RAW_DATA = [
     "options": [
       {
         "price": 269,
-        "count": "C_4",
-        "booking": "B_7D",
-        "guest": "G_1Q",
+        "count": "C_12",
+        "booking": "B_30D",
+        "guest": "G_None",
         "perks": "P_15P"
       },
       {
-        "price": 189,
+        "price": 269,
         "count": "C_4",
-        "booking": "B_30D",
+        "booking": "B_10D",
         "guest": "G_1M",
         "perks": "P_5P"
       }
@@ -274,16 +274,16 @@ const RAW_DATA = [
     "id": 15,
     "options": [
       {
-        "price": 189,
-        "count": "C_8",
-        "booking": "B_14D",
+        "price": 269,
+        "count": "C_12",
+        "booking": "B_10D",
         "guest": "G_2M",
         "perks": "P_None"
       },
       {
-        "price": 189,
+        "price": 129,
         "count": "C_8",
-        "booking": "B_10D",
+        "booking": "B_7D",
         "guest": "G_None",
         "perks": "P_5P"
       }
@@ -294,13 +294,13 @@ const RAW_DATA = [
     "options": [
       {
         "price": 189,
-        "count": "C_4",
-        "booking": "B_30D",
+        "count": "C_8",
+        "booking": "B_10D",
         "guest": "G_1Q",
         "perks": "P_10P"
       },
       {
-        "price": 189,
+        "price": 269,
         "count": "C_8",
         "booking": "B_10D",
         "guest": "G_None",
@@ -312,15 +312,15 @@ const RAW_DATA = [
     "id": 17,
     "options": [
       {
-        "price": 269,
+        "price": 189,
         "count": "C_Unl",
-        "booking": "B_30D",
+        "booking": "B_14D",
         "guest": "G_2M",
         "perks": "P_10P"
       },
       {
         "price": 129,
-        "count": "C_Unl",
+        "count": "C_4",
         "booking": "B_7D",
         "guest": "G_1M",
         "perks": "P_15P"
@@ -331,17 +331,17 @@ const RAW_DATA = [
     "id": 18,
     "options": [
       {
-        "price": 269,
-        "count": "C_12",
-        "booking": "B_14D",
+        "price": 189,
+        "count": "C_8",
+        "booking": "B_7D",
         "guest": "G_2M",
         "perks": "P_10P"
       },
       {
-        "price": 229,
-        "count": "C_4",
-        "booking": "B_10D",
-        "guest": "G_1M",
+        "price": 269,
+        "count": "C_8",
+        "booking": "B_30D",
+        "guest": "G_1Q",
         "perks": "P_5P"
       }
     ]
@@ -351,15 +351,15 @@ const RAW_DATA = [
     "options": [
       {
         "price": 269,
-        "count": "C_12",
-        "booking": "B_10D",
+        "count": "C_4",
+        "booking": "B_14D",
         "guest": "G_1M",
         "perks": "P_15P"
       },
       {
         "price": 189,
         "count": "C_8",
-        "booking": "B_14D",
+        "booking": "B_10D",
         "guest": "G_1Q",
         "perks": "P_5P"
       }
@@ -370,13 +370,13 @@ const RAW_DATA = [
     "options": [
       {
         "price": 269,
-        "count": "C_Unl",
-        "booking": "B_14D",
+        "count": "C_12",
+        "booking": "B_7D",
         "guest": "G_None",
         "perks": "P_5P"
       },
       {
-        "price": 269,
+        "price": 129,
         "count": "C_8",
         "booking": "B_30D",
         "guest": "G_None",
@@ -388,15 +388,15 @@ const RAW_DATA = [
     "id": 21,
     "options": [
       {
-        "price": 189,
+        "price": 129,
         "count": "C_4",
         "booking": "B_10D",
         "guest": "G_1Q",
         "perks": "P_None"
       },
       {
-        "price": 269,
-        "count": "C_Unl",
+        "price": 229,
+        "count": "C_4",
         "booking": "B_30D",
         "guest": "G_1Q",
         "perks": "P_None"
@@ -407,16 +407,16 @@ const RAW_DATA = [
     "id": 22,
     "options": [
       {
-        "price": 229,
+        "price": 189,
         "count": "C_8",
-        "booking": "B_7D",
-        "guest": "G_1M",
+        "booking": "B_30D",
+        "guest": "G_1Q",
         "perks": "P_None"
       },
       {
-        "price": 269,
-        "count": "C_12",
-        "booking": "B_30D",
+        "price": 189,
+        "count": "C_8",
+        "booking": "B_14D",
         "guest": "G_1M",
         "perks": "P_None"
       }
@@ -426,16 +426,16 @@ const RAW_DATA = [
     "id": 23,
     "options": [
       {
-        "price": 129,
-        "count": "C_12",
-        "booking": "B_10D",
+        "price": 229,
+        "count": "C_Unl",
+        "booking": "B_7D",
         "guest": "G_1Q",
         "perks": "P_5P"
       },
       {
-        "price": 129,
-        "count": "C_4",
-        "booking": "B_14D",
+        "price": 229,
+        "count": "C_12",
+        "booking": "B_10D",
         "guest": "G_1M",
         "perks": "P_10P"
       }
@@ -445,16 +445,16 @@ const RAW_DATA = [
     "id": 24,
     "options": [
       {
-        "price": 189,
-        "count": "C_Unl",
+        "price": 129,
+        "count": "C_4",
         "booking": "B_7D",
         "guest": "G_1M",
         "perks": "P_10P"
       },
       {
         "price": 229,
-        "count": "C_8",
-        "booking": "B_10D",
+        "count": "C_12",
+        "booking": "B_7D",
         "guest": "G_1M",
         "perks": "P_10P"
       }
@@ -465,14 +465,14 @@ const RAW_DATA = [
     "options": [
       {
         "price": 189,
-        "count": "C_8",
-        "booking": "B_10D",
+        "count": "C_12",
+        "booking": "B_7D",
         "guest": "G_2M",
         "perks": "P_None"
       },
       {
-        "price": 189,
-        "count": "C_Unl",
+        "price": 269,
+        "count": "C_8",
         "booking": "B_7D",
         "guest": "G_None",
         "perks": "P_15P"
@@ -483,15 +483,15 @@ const RAW_DATA = [
     "id": 26,
     "options": [
       {
-        "price": 229,
+        "price": 129,
         "count": "C_4",
-        "booking": "B_30D",
+        "booking": "B_10D",
         "guest": "G_2M",
         "perks": "P_10P"
       },
       {
-        "price": 129,
-        "count": "C_Unl",
+        "price": 229,
+        "count": "C_8",
         "booking": "B_10D",
         "guest": "G_2M",
         "perks": "P_5P"
@@ -502,15 +502,15 @@ const RAW_DATA = [
     "id": 27,
     "options": [
       {
-        "price": 229,
-        "count": "C_8",
+        "price": 269,
+        "count": "C_Unl",
         "booking": "B_10D",
         "guest": "G_1Q",
         "perks": "P_15P"
       },
       {
-        "price": 229,
-        "count": "C_Unl",
+        "price": 129,
+        "count": "C_8",
         "booking": "B_30D",
         "guest": "G_2M",
         "perks": "P_15P"
@@ -521,16 +521,16 @@ const RAW_DATA = [
     "id": 28,
     "options": [
       {
-        "price": 129,
-        "count": "C_4",
-        "booking": "B_14D",
+        "price": 189,
+        "count": "C_8",
+        "booking": "B_10D",
         "guest": "G_1M",
         "perks": "P_None"
       },
       {
-        "price": 129,
-        "count": "C_8",
-        "booking": "B_30D",
+        "price": 189,
+        "count": "C_4",
+        "booking": "B_10D",
         "guest": "G_None",
         "perks": "P_5P"
       }
@@ -540,7 +540,7 @@ const RAW_DATA = [
     "id": 29,
     "options": [
       {
-        "price": 269,
+        "price": 189,
         "count": "C_Unl",
         "booking": "B_30D",
         "guest": "G_None",
@@ -548,7 +548,7 @@ const RAW_DATA = [
       },
       {
         "price": 189,
-        "count": "C_12",
+        "count": "C_4",
         "booking": "B_30D",
         "guest": "G_2M",
         "perks": "P_15P"
@@ -559,15 +559,15 @@ const RAW_DATA = [
     "id": 30,
     "options": [
       {
-        "price": 129,
-        "count": "C_4",
-        "booking": "B_10D",
-        "guest": "G_2M",
+        "price": 189,
+        "count": "C_Unl",
+        "booking": "B_30D",
+        "guest": "G_1M",
         "perks": "P_10P"
       },
       {
-        "price": 269,
-        "count": "C_8",
+        "price": 129,
+        "count": "C_4",
         "booking": "B_10D",
         "guest": "G_2M",
         "perks": "P_None"
@@ -578,17 +578,17 @@ const RAW_DATA = [
     "id": 31,
     "options": [
       {
-        "price": 229,
+        "price": 269,
         "count": "C_8",
         "booking": "B_30D",
         "guest": "G_1M",
         "perks": "P_15P"
       },
       {
-        "price": 129,
-        "count": "C_8",
-        "booking": "B_10D",
-        "guest": "G_1M",
+        "price": 269,
+        "count": "C_Unl",
+        "booking": "B_30D",
+        "guest": "G_1Q",
         "perks": "P_5P"
       }
     ]
@@ -597,16 +597,16 @@ const RAW_DATA = [
     "id": 32,
     "options": [
       {
-        "price": 229,
-        "count": "C_4",
-        "booking": "B_30D",
+        "price": 129,
+        "count": "C_8",
+        "booking": "B_14D",
         "guest": "G_2M",
         "perks": "P_5P"
       },
       {
-        "price": 229,
+        "price": 269,
         "count": "C_12",
-        "booking": "B_30D",
+        "booking": "B_10D",
         "guest": "G_1M",
         "perks": "P_None"
       }
@@ -616,16 +616,16 @@ const RAW_DATA = [
     "id": 33,
     "options": [
       {
-        "price": 269,
-        "count": "C_8",
-        "booking": "B_7D",
-        "guest": "G_1M",
+        "price": 189,
+        "count": "C_12",
+        "booking": "B_30D",
+        "guest": "G_1Q",
         "perks": "P_10P"
       },
       {
         "price": 269,
-        "count": "C_4",
-        "booking": "B_30D",
+        "count": "C_12",
+        "booking": "B_14D",
         "guest": "G_None",
         "perks": "P_None"
       }
@@ -635,16 +635,16 @@ const RAW_DATA = [
     "id": 34,
     "options": [
       {
-        "price": 189,
-        "count": "C_Unl",
-        "booking": "B_10D",
+        "price": 129,
+        "count": "C_8",
+        "booking": "B_7D",
         "guest": "G_1Q",
         "perks": "P_10P"
       },
       {
-        "price": 229,
-        "count": "C_8",
-        "booking": "B_30D",
+        "price": 129,
+        "count": "C_4",
+        "booking": "B_14D",
         "guest": "G_1Q",
         "perks": "P_10P"
       }
@@ -654,16 +654,16 @@ const RAW_DATA = [
     "id": 35,
     "options": [
       {
-        "price": 269,
-        "count": "C_Unl",
-        "booking": "B_14D",
+        "price": 189,
+        "count": "C_4",
+        "booking": "B_7D",
         "guest": "G_1M",
         "perks": "P_5P"
       },
       {
-        "price": 269,
-        "count": "C_4",
-        "booking": "B_14D",
+        "price": 189,
+        "count": "C_Unl",
+        "booking": "B_7D",
         "guest": "G_2M",
         "perks": "P_15P"
       }
@@ -673,15 +673,15 @@ const RAW_DATA = [
     "id": 36,
     "options": [
       {
-        "price": 129,
-        "count": "C_4",
-        "booking": "B_7D",
-        "guest": "G_2M",
+        "price": 189,
+        "count": "C_Unl",
+        "booking": "B_14D",
+        "guest": "G_1M",
         "perks": "P_None"
       },
       {
-        "price": 269,
-        "count": "C_12",
+        "price": 189,
+        "count": "C_Unl",
         "booking": "B_10D",
         "guest": "G_None",
         "perks": "P_10P"
@@ -692,16 +692,16 @@ const RAW_DATA = [
     "id": 37,
     "options": [
       {
-        "price": 189,
-        "count": "C_4",
-        "booking": "B_7D",
-        "guest": "G_2M",
+        "price": 269,
+        "count": "C_Unl",
+        "booking": "B_14D",
+        "guest": "G_1M",
         "perks": "P_None"
       },
       {
         "price": 189,
-        "count": "C_4",
-        "booking": "B_30D",
+        "count": "C_Unl",
+        "booking": "B_14D",
         "guest": "G_None",
         "perks": "P_15P"
       }
@@ -711,15 +711,15 @@ const RAW_DATA = [
     "id": 38,
     "options": [
       {
-        "price": 189,
+        "price": 269,
         "count": "C_12",
-        "booking": "B_30D",
+        "booking": "B_14D",
         "guest": "G_1Q",
         "perks": "P_10P"
       },
       {
-        "price": 189,
-        "count": "C_8",
+        "price": 229,
+        "count": "C_12",
         "booking": "B_14D",
         "guest": "G_1M",
         "perks": "P_15P"
@@ -730,15 +730,15 @@ const RAW_DATA = [
     "id": 39,
     "options": [
       {
-        "price": 269,
-        "count": "C_12",
-        "booking": "B_10D",
+        "price": 189,
+        "count": "C_4",
+        "booking": "B_14D",
         "guest": "G_1Q",
         "perks": "P_15P"
       },
       {
-        "price": 129,
-        "count": "C_12",
+        "price": 229,
+        "count": "C_4",
         "booking": "B_14D",
         "guest": "G_None",
         "perks": "P_None"
@@ -769,15 +769,15 @@ const RAW_DATA = [
     "options": [
       {
         "price": 269,
-        "count": "C_Unl",
-        "booking": "B_14D",
+        "count": "C_12",
+        "booking": "B_7D",
         "guest": "G_1Q",
         "perks": "P_10P"
       },
       {
-        "price": 189,
-        "count": "C_Unl",
-        "booking": "B_10D",
+        "price": 269,
+        "count": "C_4",
+        "booking": "B_14D",
         "guest": "G_2M",
         "perks": "P_5P"
       }
@@ -787,17 +787,17 @@ const RAW_DATA = [
     "id": 42,
     "options": [
       {
-        "price": 189,
-        "count": "C_12",
+        "price": 129,
+        "count": "C_8",
         "booking": "B_14D",
         "guest": "G_2M",
         "perks": "P_None"
       },
       {
-        "price": 269,
-        "count": "C_12",
-        "booking": "B_7D",
-        "guest": "G_2M",
+        "price": 229,
+        "count": "C_Unl",
+        "booking": "B_30D",
+        "guest": "G_1M",
         "perks": "P_5P"
       }
     ]
@@ -806,16 +806,16 @@ const RAW_DATA = [
     "id": 43,
     "options": [
       {
-        "price": 129,
-        "count": "C_8",
+        "price": 189,
+        "count": "C_12",
         "booking": "B_30D",
         "guest": "G_None",
         "perks": "P_15P"
       },
       {
-        "price": 189,
-        "count": "C_12",
-        "booking": "B_14D",
+        "price": 229,
+        "count": "C_8",
+        "booking": "B_30D",
         "guest": "G_1M",
         "perks": "P_10P"
       }
@@ -825,16 +825,16 @@ const RAW_DATA = [
     "id": 44,
     "options": [
       {
-        "price": 269,
-        "count": "C_4",
-        "booking": "B_7D",
-        "guest": "G_1M",
+        "price": 229,
+        "count": "C_12",
+        "booking": "B_14D",
+        "guest": "G_1Q",
         "perks": "P_15P"
       },
       {
         "price": 229,
         "count": "C_12",
-        "booking": "B_14D",
+        "booking": "B_10D",
         "guest": "G_2M",
         "perks": "P_15P"
       }
@@ -846,14 +846,14 @@ const RAW_DATA = [
       {
         "price": 189,
         "count": "C_12",
-        "booking": "B_7D",
-        "guest": "G_2M",
+        "booking": "B_14D",
+        "guest": "G_1M",
         "perks": "P_5P"
       },
       {
-        "price": 229,
-        "count": "C_4",
-        "booking": "B_14D",
+        "price": 269,
+        "count": "C_Unl",
+        "booking": "B_10D",
         "guest": "G_1Q",
         "perks": "P_None"
       }
@@ -863,9 +863,9 @@ const RAW_DATA = [
     "id": 46,
     "options": [
       {
-        "price": 129,
-        "count": "C_Unl",
-        "booking": "B_30D",
+        "price": 269,
+        "count": "C_8",
+        "booking": "B_14D",
         "guest": "G_None",
         "perks": "P_10P"
       },
@@ -883,14 +883,14 @@ const RAW_DATA = [
     "options": [
       {
         "price": 229,
-        "count": "C_12",
+        "count": "C_8",
         "booking": "B_14D",
         "guest": "G_None",
         "perks": "P_10P"
       },
       {
-        "price": 189,
-        "count": "C_Unl",
+        "price": 129,
+        "count": "C_4",
         "booking": "B_30D",
         "guest": "G_1Q",
         "perks": "P_5P"
@@ -902,15 +902,15 @@ const RAW_DATA = [
     "options": [
       {
         "price": 229,
-        "count": "C_12",
-        "booking": "B_10D",
+        "count": "C_8",
+        "booking": "B_7D",
         "guest": "G_None",
         "perks": "P_None"
       },
       {
         "price": 189,
-        "count": "C_4",
-        "booking": "B_14D",
+        "count": "C_12",
+        "booking": "B_7D",
         "guest": "G_None",
         "perks": "P_5P"
       }
@@ -920,16 +920,16 @@ const RAW_DATA = [
     "id": 49,
     "options": [
       {
-        "price": 129,
-        "count": "C_8",
-        "booking": "B_30D",
+        "price": 269,
+        "count": "C_4",
+        "booking": "B_14D",
         "guest": "G_2M",
         "perks": "P_10P"
       },
       {
-        "price": 229,
-        "count": "C_8",
-        "booking": "B_14D",
+        "price": 189,
+        "count": "C_12",
+        "booking": "B_10D",
         "guest": "G_1Q",
         "perks": "P_5P"
       }
@@ -939,15 +939,15 @@ const RAW_DATA = [
     "id": 50,
     "options": [
       {
-        "price": 269,
+        "price": 229,
         "count": "C_4",
         "booking": "B_10D",
         "guest": "G_None",
         "perks": "P_10P"
       },
       {
-        "price": 129,
-        "count": "C_12",
+        "price": 229,
+        "count": "C_4",
         "booking": "B_7D",
         "guest": "G_None",
         "perks": "P_None"
