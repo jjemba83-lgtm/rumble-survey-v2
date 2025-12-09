@@ -1,357 +1,957 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Trophy, MapPin, User, Check, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 
-// --- DATA: V2 PAIRS FROM CSV (Processed) ---
+// --- DATA: NEW RANDOM BLOCKS (SEE RUMBLE_CBC_DESIGN_README) ---
 // Note: Prices converted from "P_269" format to integer 269 for consistency
 const RAW_DATA = [
   {
     "id": 1,
     "options": [
-      { "price": 269, "count": "C_8", "booking": "B_7D", "guest": "G_2M", "perks": "P_10P" },
-      { "price": 129, "count": "C_4", "booking": "B_10D", "guest": "G_1Q", "perks": "P_15P" }
+      {
+        "price": 129,
+        "count": "C_4",
+        "booking": "B_7D",
+        "guest": "G_1Q",
+        "perks": "P_5P"
+      },
+      {
+        "price": 229,
+        "count": "C_Unl",
+        "booking": "B_14D",
+        "guest": "G_None",
+        "perks": "P_15P"
+      }
     ]
   },
   {
     "id": 2,
     "options": [
-      { "price": 229, "count": "C_Unl", "booking": "B_10D", "guest": "G_1M", "perks": "P_None" },
-      { "price": 129, "count": "C_8", "booking": "B_14D", "guest": "G_2M", "perks": "P_15P" }
+      {
+        "price": 189,
+        "count": "C_Unl",
+        "booking": "B_7D",
+        "guest": "G_None",
+        "perks": "P_10P"
+      },
+      {
+        "price": 129,
+        "count": "C_Unl",
+        "booking": "B_7D",
+        "guest": "G_1M",
+        "perks": "P_None"
+      }
     ]
   },
   {
     "id": 3,
     "options": [
-      { "price": 269, "count": "C_12", "booking": "B_30D", "guest": "G_1M", "perks": "P_None" },
-      { "price": 229, "count": "C_Unl", "booking": "B_7D", "guest": "G_2M", "perks": "P_5P" }
+      {
+        "price": 229,
+        "count": "C_4",
+        "booking": "B_14D",
+        "guest": "G_1M",
+        "perks": "P_10P"
+      },
+      {
+        "price": 269,
+        "count": "C_8",
+        "booking": "B_30D",
+        "guest": "G_1M",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 4,
     "options": [
-      { "price": 129, "count": "C_Unl", "booking": "B_10D", "guest": "G_2M", "perks": "P_5P" },
-      { "price": 189, "count": "C_8", "booking": "B_14D", "guest": "G_1M", "perks": "P_15P" }
+      {
+        "price": 229,
+        "count": "C_8",
+        "booking": "B_7D",
+        "guest": "G_None",
+        "perks": "P_10P"
+      },
+      {
+        "price": 129,
+        "count": "C_12",
+        "booking": "B_30D",
+        "guest": "G_1M",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 5,
     "options": [
-      { "price": 189, "count": "C_8", "booking": "B_10D", "guest": "G_None", "perks": "P_5P" },
-      { "price": 129, "count": "C_Unl", "booking": "B_14D", "guest": "G_2M", "perks": "P_10P" }
+      {
+        "price": 129,
+        "count": "C_8",
+        "booking": "B_14D",
+        "guest": "G_2M",
+        "perks": "P_15P"
+      },
+      {
+        "price": 229,
+        "count": "C_12",
+        "booking": "B_7D",
+        "guest": "G_None",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 6,
     "options": [
-      { "price": 229, "count": "C_4", "booking": "B_10D", "guest": "G_1M", "perks": "P_5P" },
-      { "price": 129, "count": "C_8", "booking": "B_30D", "guest": "G_None", "perks": "P_15P" }
+      {
+        "price": 189,
+        "count": "C_12",
+        "booking": "B_10D",
+        "guest": "G_1M",
+        "perks": "P_15P"
+      },
+      {
+        "price": 269,
+        "count": "C_8",
+        "booking": "B_7D",
+        "guest": "G_2M",
+        "perks": "P_10P"
+      }
     ]
   },
   {
     "id": 7,
     "options": [
-      { "price": 229, "count": "C_Unl", "booking": "B_10D", "guest": "G_1Q", "perks": "P_10P" },
-      { "price": 269, "count": "C_12", "booking": "B_7D", "guest": "G_2M", "perks": "P_5P" }
+      {
+        "price": 129,
+        "count": "C_12",
+        "booking": "B_7D",
+        "guest": "G_1Q",
+        "perks": "P_10P"
+      },
+      {
+        "price": 129,
+        "count": "C_Unl",
+        "booking": "B_10D",
+        "guest": "G_1Q",
+        "perks": "P_None"
+      }
     ]
   },
   {
     "id": 8,
     "options": [
-      { "price": 189, "count": "C_Unl", "booking": "B_14D", "guest": "G_None", "perks": "P_15P" },
-      { "price": 229, "count": "C_12", "booking": "B_30D", "guest": "G_1M", "perks": "P_10P" }
+      {
+        "price": 129,
+        "count": "C_Unl",
+        "booking": "B_14D",
+        "guest": "G_2M",
+        "perks": "P_10P"
+      },
+      {
+        "price": 269,
+        "count": "C_4",
+        "booking": "B_10D",
+        "guest": "G_None",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 9,
     "options": [
-      { "price": 189, "count": "C_12", "booking": "B_30D", "guest": "G_1M", "perks": "P_5P" },
-      { "price": 129, "count": "C_4", "booking": "B_14D", "guest": "G_None", "perks": "P_None" }
+      {
+        "price": 189,
+        "count": "C_8",
+        "booking": "B_7D",
+        "guest": "G_1Q",
+        "perks": "P_None"
+      },
+      {
+        "price": 229,
+        "count": "C_Unl",
+        "booking": "B_10D",
+        "guest": "G_2M",
+        "perks": "P_15P"
+      }
     ]
   },
   {
     "id": 10,
     "options": [
-      { "price": 129, "count": "C_4", "booking": "B_14D", "guest": "G_None", "perks": "P_5P" },
-      { "price": 229, "count": "C_Unl", "booking": "B_30D", "guest": "G_2M", "perks": "P_15P" }
+      {
+        "price": 129,
+        "count": "C_12",
+        "booking": "B_30D",
+        "guest": "G_1Q",
+        "perks": "P_15P"
+      },
+      {
+        "price": 269,
+        "count": "C_8",
+        "booking": "B_14D",
+        "guest": "G_1Q",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 11,
     "options": [
-      { "price": 269, "count": "C_12", "booking": "B_10D", "guest": "G_None", "perks": "P_15P" },
-      { "price": 229, "count": "C_8", "booking": "B_14D", "guest": "G_1Q", "perks": "P_5P" }
+      {
+        "price": 129,
+        "count": "C_8",
+        "booking": "B_14D",
+        "guest": "G_None",
+        "perks": "P_15P"
+      },
+      {
+        "price": 189,
+        "count": "C_Unl",
+        "booking": "B_14D",
+        "guest": "G_1M",
+        "perks": "P_15P"
+      }
     ]
   },
   {
     "id": 12,
     "options": [
-      { "price": 229, "count": "C_8", "booking": "B_7D", "guest": "G_None", "perks": "P_10P" },
-      { "price": 189, "count": "C_Unl", "booking": "B_14D", "guest": "G_1M", "perks": "P_5P" }
+      {
+        "price": 229,
+        "count": "C_4",
+        "booking": "B_7D",
+        "guest": "G_None",
+        "perks": "P_15P"
+      },
+      {
+        "price": 229,
+        "count": "C_Unl",
+        "booking": "B_10D",
+        "guest": "G_1M",
+        "perks": "P_None"
+      }
     ]
   },
   {
     "id": 13,
     "options": [
-      { "price": 229, "count": "C_8", "booking": "B_7D", "guest": "G_1Q", "perks": "P_None" },
-      { "price": 129, "count": "C_Unl", "booking": "B_10D", "guest": "G_2M", "perks": "P_15P" }
+      {
+        "price": 229,
+        "count": "C_12",
+        "booking": "B_7D",
+        "guest": "G_1Q",
+        "perks": "P_5P"
+      },
+      {
+        "price": 129,
+        "count": "C_4",
+        "booking": "B_10D",
+        "guest": "G_1Q",
+        "perks": "P_15P"
+      }
     ]
   },
   {
     "id": 14,
     "options": [
-      { "price": 189, "count": "C_4", "booking": "B_7D", "guest": "G_2M", "perks": "P_15P" },
-      { "price": 269, "count": "C_8", "booking": "B_14D", "guest": "G_1Q", "perks": "P_5P" }
+      {
+        "price": 269,
+        "count": "C_4",
+        "booking": "B_7D",
+        "guest": "G_1Q",
+        "perks": "P_15P"
+      },
+      {
+        "price": 189,
+        "count": "C_4",
+        "booking": "B_30D",
+        "guest": "G_1M",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 15,
     "options": [
-      { "price": 189, "count": "C_12", "booking": "B_10D", "guest": "G_None", "perks": "P_15P" },
-      { "price": 229, "count": "C_4", "booking": "B_14D", "guest": "G_1M", "perks": "P_None" }
+      {
+        "price": 189,
+        "count": "C_8",
+        "booking": "B_14D",
+        "guest": "G_2M",
+        "perks": "P_None"
+      },
+      {
+        "price": 189,
+        "count": "C_8",
+        "booking": "B_10D",
+        "guest": "G_None",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 16,
     "options": [
-      { "price": 269, "count": "C_8", "booking": "B_14D", "guest": "G_1M", "perks": "P_15P" },
-      { "price": 189, "count": "C_Unl", "booking": "B_30D", "guest": "G_2M", "perks": "P_None" }
+      {
+        "price": 189,
+        "count": "C_4",
+        "booking": "B_30D",
+        "guest": "G_1Q",
+        "perks": "P_10P"
+      },
+      {
+        "price": 189,
+        "count": "C_8",
+        "booking": "B_10D",
+        "guest": "G_None",
+        "perks": "P_10P"
+      }
     ]
   },
   {
     "id": 17,
     "options": [
-      { "price": 189, "count": "C_4", "booking": "B_14D", "guest": "G_None", "perks": "P_None" },
-      { "price": 129, "count": "C_8", "booking": "B_30D", "guest": "G_2M", "perks": "P_5P" }
+      {
+        "price": 269,
+        "count": "C_Unl",
+        "booking": "B_30D",
+        "guest": "G_2M",
+        "perks": "P_10P"
+      },
+      {
+        "price": 129,
+        "count": "C_Unl",
+        "booking": "B_7D",
+        "guest": "G_1M",
+        "perks": "P_15P"
+      }
     ]
   },
   {
     "id": 18,
     "options": [
-      { "price": 129, "count": "C_12", "booking": "B_14D", "guest": "G_1M", "perks": "P_None" },
-      { "price": 189, "count": "C_8", "booking": "B_7D", "guest": "G_1Q", "perks": "P_5P" }
+      {
+        "price": 269,
+        "count": "C_12",
+        "booking": "B_14D",
+        "guest": "G_2M",
+        "perks": "P_10P"
+      },
+      {
+        "price": 229,
+        "count": "C_4",
+        "booking": "B_10D",
+        "guest": "G_1M",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 19,
     "options": [
-      { "price": 189, "count": "C_Unl", "booking": "B_7D", "guest": "G_1Q", "perks": "P_10P" },
-      { "price": 269, "count": "C_4", "booking": "B_30D", "guest": "G_None", "perks": "P_15P" }
+      {
+        "price": 269,
+        "count": "C_12",
+        "booking": "B_10D",
+        "guest": "G_1M",
+        "perks": "P_15P"
+      },
+      {
+        "price": 189,
+        "count": "C_8",
+        "booking": "B_14D",
+        "guest": "G_1Q",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 20,
     "options": [
-      { "price": 129, "count": "C_4", "booking": "B_30D", "guest": "G_1Q", "perks": "P_5P" },
-      { "price": 229, "count": "C_12", "booking": "B_14D", "guest": "G_None", "perks": "P_10P" }
+      {
+        "price": 269,
+        "count": "C_Unl",
+        "booking": "B_14D",
+        "guest": "G_None",
+        "perks": "P_5P"
+      },
+      {
+        "price": 269,
+        "count": "C_8",
+        "booking": "B_30D",
+        "guest": "G_None",
+        "perks": "P_None"
+      }
     ]
   },
   {
     "id": 21,
     "options": [
-      { "price": 229, "count": "C_Unl", "booking": "B_14D", "guest": "G_None", "perks": "P_15P" },
-      { "price": 269, "count": "C_4", "booking": "B_10D", "guest": "G_1M", "perks": "P_5P" }
+      {
+        "price": 189,
+        "count": "C_4",
+        "booking": "B_10D",
+        "guest": "G_1Q",
+        "perks": "P_None"
+      },
+      {
+        "price": 269,
+        "count": "C_Unl",
+        "booking": "B_30D",
+        "guest": "G_1Q",
+        "perks": "P_None"
+      }
     ]
   },
   {
     "id": 22,
     "options": [
-      { "price": 129, "count": "C_12", "booking": "B_30D", "guest": "G_1M", "perks": "P_5P" },
-      { "price": 269, "count": "C_Unl", "booking": "B_10D", "guest": "G_2M", "perks": "P_None" }
+      {
+        "price": 229,
+        "count": "C_8",
+        "booking": "B_7D",
+        "guest": "G_1M",
+        "perks": "P_None"
+      },
+      {
+        "price": 269,
+        "count": "C_12",
+        "booking": "B_30D",
+        "guest": "G_1M",
+        "perks": "P_None"
+      }
     ]
   },
   {
     "id": 23,
     "options": [
-      { "price": 129, "count": "C_8", "booking": "B_10D", "guest": "G_1Q", "perks": "P_10P" },
-      { "price": 229, "count": "C_12", "booking": "B_30D", "guest": "G_None", "perks": "P_15P" }
+      {
+        "price": 129,
+        "count": "C_12",
+        "booking": "B_10D",
+        "guest": "G_1Q",
+        "perks": "P_5P"
+      },
+      {
+        "price": 129,
+        "count": "C_4",
+        "booking": "B_14D",
+        "guest": "G_1M",
+        "perks": "P_10P"
+      }
     ]
   },
   {
     "id": 24,
     "options": [
-      { "price": 269, "count": "C_Unl", "booking": "B_30D", "guest": "G_None", "perks": "P_5P" },
-      { "price": 229, "count": "C_8", "booking": "B_10D", "guest": "G_1M", "perks": "P_10P" }
+      {
+        "price": 189,
+        "count": "C_Unl",
+        "booking": "B_7D",
+        "guest": "G_1M",
+        "perks": "P_10P"
+      },
+      {
+        "price": 229,
+        "count": "C_8",
+        "booking": "B_10D",
+        "guest": "G_1M",
+        "perks": "P_10P"
+      }
     ]
   },
   {
     "id": 25,
     "options": [
-      { "price": 189, "count": "C_8", "booking": "B_30D", "guest": "G_2M", "perks": "P_None" },
-      { "price": 229, "count": "C_12", "booking": "B_7D", "guest": "G_1Q", "perks": "P_5P" }
+      {
+        "price": 189,
+        "count": "C_8",
+        "booking": "B_10D",
+        "guest": "G_2M",
+        "perks": "P_None"
+      },
+      {
+        "price": 189,
+        "count": "C_Unl",
+        "booking": "B_7D",
+        "guest": "G_None",
+        "perks": "P_15P"
+      }
     ]
   },
   {
     "id": 26,
     "options": [
-      { "price": 229, "count": "C_12", "booking": "B_10D", "guest": "G_2M", "perks": "P_None" },
-      { "price": 269, "count": "C_8", "booking": "B_30D", "guest": "G_1M", "perks": "P_15P" }
+      {
+        "price": 229,
+        "count": "C_4",
+        "booking": "B_30D",
+        "guest": "G_2M",
+        "perks": "P_10P"
+      },
+      {
+        "price": 129,
+        "count": "C_Unl",
+        "booking": "B_10D",
+        "guest": "G_2M",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 27,
     "options": [
-      { "price": 189, "count": "C_12", "booking": "B_14D", "guest": "G_1M", "perks": "P_10P" },
-      { "price": 269, "count": "C_Unl", "booking": "B_7D", "guest": "G_None", "perks": "P_5P" }
+      {
+        "price": 229,
+        "count": "C_8",
+        "booking": "B_10D",
+        "guest": "G_1Q",
+        "perks": "P_15P"
+      },
+      {
+        "price": 229,
+        "count": "C_Unl",
+        "booking": "B_30D",
+        "guest": "G_2M",
+        "perks": "P_15P"
+      }
     ]
   },
   {
     "id": 28,
     "options": [
-      { "price": 269, "count": "C_Unl", "booking": "B_30D", "guest": "G_1Q", "perks": "P_10P" },
-      { "price": 189, "count": "C_4", "booking": "B_10D", "guest": "G_None", "perks": "P_None" }
+      {
+        "price": 129,
+        "count": "C_4",
+        "booking": "B_14D",
+        "guest": "G_1M",
+        "perks": "P_None"
+      },
+      {
+        "price": 129,
+        "count": "C_8",
+        "booking": "B_30D",
+        "guest": "G_None",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 29,
     "options": [
-      { "price": 129, "count": "C_12", "booking": "B_7D", "guest": "G_None", "perks": "P_15P" },
-      { "price": 189, "count": "C_Unl", "booking": "B_10D", "guest": "G_2M", "perks": "P_5P" }
+      {
+        "price": 269,
+        "count": "C_Unl",
+        "booking": "B_30D",
+        "guest": "G_None",
+        "perks": "P_None"
+      },
+      {
+        "price": 189,
+        "count": "C_12",
+        "booking": "B_30D",
+        "guest": "G_2M",
+        "perks": "P_15P"
+      }
     ]
   },
   {
     "id": 30,
     "options": [
-      { "price": 229, "count": "C_8", "booking": "B_14D", "guest": "G_2M", "perks": "P_None" },
-      { "price": 189, "count": "C_12", "booking": "B_7D", "guest": "G_1M", "perks": "P_15P" }
+      {
+        "price": 129,
+        "count": "C_4",
+        "booking": "B_10D",
+        "guest": "G_2M",
+        "perks": "P_10P"
+      },
+      {
+        "price": 269,
+        "count": "C_8",
+        "booking": "B_10D",
+        "guest": "G_2M",
+        "perks": "P_None"
+      }
     ]
   },
   {
     "id": 31,
     "options": [
-      { "price": 189, "count": "C_4", "booking": "B_30D", "guest": "G_2M", "perks": "P_10P" },
-      { "price": 269, "count": "C_12", "booking": "B_14D", "guest": "G_None", "perks": "P_None" }
+      {
+        "price": 229,
+        "count": "C_8",
+        "booking": "B_30D",
+        "guest": "G_1M",
+        "perks": "P_15P"
+      },
+      {
+        "price": 129,
+        "count": "C_8",
+        "booking": "B_10D",
+        "guest": "G_1M",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 32,
     "options": [
-      { "price": 129, "count": "C_8", "booking": "B_14D", "guest": "G_1M", "perks": "P_5P" },
-      { "price": 269, "count": "C_Unl", "booking": "B_10D", "guest": "G_None", "perks": "P_10P" }
+      {
+        "price": 229,
+        "count": "C_4",
+        "booking": "B_30D",
+        "guest": "G_2M",
+        "perks": "P_5P"
+      },
+      {
+        "price": 229,
+        "count": "C_12",
+        "booking": "B_30D",
+        "guest": "G_1M",
+        "perks": "P_None"
+      }
     ]
   },
   {
     "id": 33,
     "options": [
-      { "price": 269, "count": "C_12", "booking": "B_10D", "guest": "G_None", "perks": "P_10P" },
-      { "price": 229, "count": "C_8", "booking": "B_30D", "guest": "G_1M", "perks": "P_15P" }
+      {
+        "price": 269,
+        "count": "C_8",
+        "booking": "B_7D",
+        "guest": "G_1M",
+        "perks": "P_10P"
+      },
+      {
+        "price": 269,
+        "count": "C_4",
+        "booking": "B_30D",
+        "guest": "G_None",
+        "perks": "P_None"
+      }
     ]
   },
   {
     "id": 34,
     "options": [
-      { "price": 129, "count": "C_4", "booking": "B_7D", "guest": "G_1Q", "perks": "P_5P" },
-      { "price": 189, "count": "C_12", "booking": "B_10D", "guest": "G_1M", "perks": "P_15P" }
+      {
+        "price": 189,
+        "count": "C_Unl",
+        "booking": "B_10D",
+        "guest": "G_1Q",
+        "perks": "P_10P"
+      },
+      {
+        "price": 229,
+        "count": "C_8",
+        "booking": "B_30D",
+        "guest": "G_1Q",
+        "perks": "P_10P"
+      }
     ]
   },
   {
     "id": 35,
     "options": [
-      { "price": 129, "count": "C_12", "booking": "B_14D", "guest": "G_None", "perks": "P_None" },
-      { "price": 269, "count": "C_4", "booking": "B_7D", "guest": "G_1M", "perks": "P_15P" }
+      {
+        "price": 269,
+        "count": "C_Unl",
+        "booking": "B_14D",
+        "guest": "G_1M",
+        "perks": "P_5P"
+      },
+      {
+        "price": 269,
+        "count": "C_4",
+        "booking": "B_14D",
+        "guest": "G_2M",
+        "perks": "P_15P"
+      }
     ]
   },
   {
     "id": 36,
     "options": [
-      { "price": 229, "count": "C_12", "booking": "B_7D", "guest": "G_1Q", "perks": "P_5P" },
-      { "price": 129, "count": "C_4", "booking": "B_10D", "guest": "G_2M", "perks": "P_10P" }
+      {
+        "price": 129,
+        "count": "C_4",
+        "booking": "B_7D",
+        "guest": "G_2M",
+        "perks": "P_None"
+      },
+      {
+        "price": 269,
+        "count": "C_12",
+        "booking": "B_10D",
+        "guest": "G_None",
+        "perks": "P_10P"
+      }
     ]
   },
   {
     "id": 37,
     "options": [
-      { "price": 229, "count": "C_4", "booking": "B_14D", "guest": "G_1Q", "perks": "P_None" },
-      { "price": 129, "count": "C_12", "booking": "B_30D", "guest": "G_1M", "perks": "P_5P" }
+      {
+        "price": 189,
+        "count": "C_4",
+        "booking": "B_7D",
+        "guest": "G_2M",
+        "perks": "P_None"
+      },
+      {
+        "price": 189,
+        "count": "C_4",
+        "booking": "B_30D",
+        "guest": "G_None",
+        "perks": "P_15P"
+      }
     ]
   },
   {
     "id": 38,
     "options": [
-      { "price": 269, "count": "C_8", "booking": "B_7D", "guest": "G_1M", "perks": "P_10P" },
-      { "price": 229, "count": "C_12", "booking": "B_14D", "guest": "G_2M", "perks": "P_15P" }
+      {
+        "price": 189,
+        "count": "C_12",
+        "booking": "B_30D",
+        "guest": "G_1Q",
+        "perks": "P_10P"
+      },
+      {
+        "price": 189,
+        "count": "C_8",
+        "booking": "B_14D",
+        "guest": "G_1M",
+        "perks": "P_15P"
+      }
     ]
   },
   {
     "id": 39,
     "options": [
-      { "price": 189, "count": "C_Unl", "booking": "B_30D", "guest": "G_1Q", "perks": "P_5P" },
-      { "price": 269, "count": "C_8", "booking": "B_10D", "guest": "G_2M", "perks": "P_None" }
+      {
+        "price": 269,
+        "count": "C_12",
+        "booking": "B_10D",
+        "guest": "G_1Q",
+        "perks": "P_15P"
+      },
+      {
+        "price": 129,
+        "count": "C_12",
+        "booking": "B_14D",
+        "guest": "G_None",
+        "perks": "P_None"
+      }
     ]
   },
   {
     "id": 40,
     "options": [
-      { "price": 229, "count": "C_Unl", "booking": "B_7D", "guest": "G_None", "perks": "P_None" },
-      { "price": 129, "count": "C_8", "booking": "B_14D", "guest": "G_1Q", "perks": "P_10P" }
+      {
+        "price": 269,
+        "count": "C_8",
+        "booking": "B_7D",
+        "guest": "G_1Q",
+        "perks": "P_15P"
+      },
+      {
+        "price": 229,
+        "count": "C_Unl",
+        "booking": "B_7D",
+        "guest": "G_2M",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 41,
     "options": [
-      { "price": 189, "count": "C_Unl", "booking": "B_14D", "guest": "G_None", "perks": "P_None" },
-      { "price": 229, "count": "C_4", "booking": "B_7D", "guest": "G_2M", "perks": "P_15P" }
+      {
+        "price": 269,
+        "count": "C_Unl",
+        "booking": "B_14D",
+        "guest": "G_1Q",
+        "perks": "P_10P"
+      },
+      {
+        "price": 189,
+        "count": "C_Unl",
+        "booking": "B_10D",
+        "guest": "G_2M",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 42,
     "options": [
-      { "price": 229, "count": "C_8", "booking": "B_30D", "guest": "G_1Q", "perks": "P_5P" },
-      { "price": 189, "count": "C_4", "booking": "B_10D", "guest": "G_None", "perks": "P_10P" }
+      {
+        "price": 189,
+        "count": "C_12",
+        "booking": "B_14D",
+        "guest": "G_2M",
+        "perks": "P_None"
+      },
+      {
+        "price": 269,
+        "count": "C_12",
+        "booking": "B_7D",
+        "guest": "G_2M",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 43,
     "options": [
-      { "price": 269, "count": "C_4", "booking": "B_10D", "guest": "G_None", "perks": "P_5P" },
-      { "price": 129, "count": "C_8", "booking": "B_14D", "guest": "G_2M", "perks": "P_15P" }
+      {
+        "price": 129,
+        "count": "C_8",
+        "booking": "B_30D",
+        "guest": "G_None",
+        "perks": "P_15P"
+      },
+      {
+        "price": 189,
+        "count": "C_12",
+        "booking": "B_14D",
+        "guest": "G_1M",
+        "perks": "P_10P"
+      }
     ]
   },
   {
     "id": 44,
     "options": [
-      { "price": 129, "count": "C_Unl", "booking": "B_7D", "guest": "G_1M", "perks": "P_15P" },
-      { "price": 189, "count": "C_12", "booking": "B_30D", "guest": "G_None", "perks": "P_None" }
+      {
+        "price": 269,
+        "count": "C_4",
+        "booking": "B_7D",
+        "guest": "G_1M",
+        "perks": "P_15P"
+      },
+      {
+        "price": 229,
+        "count": "C_12",
+        "booking": "B_14D",
+        "guest": "G_2M",
+        "perks": "P_15P"
+      }
     ]
   },
   {
     "id": 45,
     "options": [
-      { "price": 269, "count": "C_Unl", "booking": "B_14D", "guest": "G_1Q", "perks": "P_None" },
-      { "price": 189, "count": "C_8", "booking": "B_10D", "guest": "G_2M", "perks": "P_10P" }
+      {
+        "price": 189,
+        "count": "C_12",
+        "booking": "B_7D",
+        "guest": "G_2M",
+        "perks": "P_5P"
+      },
+      {
+        "price": 229,
+        "count": "C_4",
+        "booking": "B_14D",
+        "guest": "G_1Q",
+        "perks": "P_None"
+      }
     ]
   },
   {
     "id": 46,
     "options": [
-      { "price": 189, "count": "C_12", "booking": "B_7D", "guest": "G_2M", "perks": "P_15P" },
-      { "price": 129, "count": "C_4", "booking": "B_10D", "guest": "G_1Q", "perks": "P_5P" }
+      {
+        "price": 129,
+        "count": "C_Unl",
+        "booking": "B_30D",
+        "guest": "G_None",
+        "perks": "P_10P"
+      },
+      {
+        "price": 229,
+        "count": "C_Unl",
+        "booking": "B_14D",
+        "guest": "G_1Q",
+        "perks": "P_None"
+      }
     ]
   },
   {
     "id": 47,
     "options": [
-      { "price": 229, "count": "C_4", "booking": "B_30D", "guest": "G_None", "perks": "P_10P" },
-      { "price": 189, "count": "C_8", "booking": "B_14D", "guest": "G_1M", "perks": "P_None" }
+      {
+        "price": 229,
+        "count": "C_12",
+        "booking": "B_14D",
+        "guest": "G_None",
+        "perks": "P_10P"
+      },
+      {
+        "price": 189,
+        "count": "C_Unl",
+        "booking": "B_30D",
+        "guest": "G_1Q",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 48,
     "options": [
-      { "price": 229, "count": "C_Unl", "booking": "B_10D", "guest": "G_1Q", "perks": "P_5P" },
-      { "price": 269, "count": "C_8", "booking": "B_30D", "guest": "G_None", "perks": "P_10P" }
+      {
+        "price": 229,
+        "count": "C_12",
+        "booking": "B_10D",
+        "guest": "G_None",
+        "perks": "P_None"
+      },
+      {
+        "price": 189,
+        "count": "C_4",
+        "booking": "B_14D",
+        "guest": "G_None",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 49,
     "options": [
-      { "price": 189, "count": "C_4", "booking": "B_10D", "guest": "G_1M", "perks": "P_15P" },
-      { "price": 269, "count": "C_12", "booking": "B_7D", "guest": "G_2M", "perks": "P_None" }
+      {
+        "price": 129,
+        "count": "C_8",
+        "booking": "B_30D",
+        "guest": "G_2M",
+        "perks": "P_10P"
+      },
+      {
+        "price": 229,
+        "count": "C_8",
+        "booking": "B_14D",
+        "guest": "G_1Q",
+        "perks": "P_5P"
+      }
     ]
   },
   {
     "id": 50,
     "options": [
-      { "price": 189, "count": "C_12", "booking": "B_30D", "guest": "G_None", "perks": "P_5P" },
-      { "price": 129, "count": "C_Unl", "booking": "B_14D", "guest": "G_1Q", "perks": "P_10P" }
+      {
+        "price": 269,
+        "count": "C_4",
+        "booking": "B_10D",
+        "guest": "G_None",
+        "perks": "P_10P"
+      },
+      {
+        "price": 129,
+        "count": "C_12",
+        "booking": "B_7D",
+        "guest": "G_None",
+        "perks": "P_None"
+      }
     ]
   }
 ];
