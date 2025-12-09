@@ -518,16 +518,20 @@ const SwipeableCard = ({ question, onChoice, currentIndex }) => {
   // Minimum swipe distance to trigger action
   const minSwipeDistance = 80;
 
-  // Threshold to distinguish tap from drag
-  const dragThreshold = 10;
+  // Threshold to distinguish tap from drag (in pixels)
+  const dragThreshold = 15;
+
+  // Track touch start time for tap detection
+  const touchStartTime = useRef(0);
 
   const onTouchStart = (e) => {
+    touchStartTime.current = Date.now();
     setTouchEnd(null);
     setTouchStart({
       x: e.targetTouches[0].clientX,
       y: e.targetTouches[0].clientY
     });
-    // Don't set isDragging yet - wait to see if they actually move
+    setIsDragging(false);
   };
 
   const onTouchMove = (e) => {
@@ -547,18 +551,39 @@ const SwipeableCard = ({ question, onChoice, currentIndex }) => {
     setSwipeOffset({ x: deltaX, y: deltaY });
   };
 
-  const onTouchEnd = () => {
-    // If we weren't dragging (just a tap), let click events handle it
-    if (!isDragging) {
-      setTouchStart(null);
-      setTouchEnd(null);
-      setSwipeOffset({ x: 0, y: 0 });
+  const onTouchEnd = (e) => {
+    const touchDuration = Date.now() - touchStartTime.current;
+
+    // Calculate total movement
+    const totalMove = touchEnd
+      ? Math.abs(touchEnd.x - touchStart?.x || 0) + Math.abs(touchEnd.y - touchStart?.y || 0)
+      : 0;
+
+    // If it was a quick tap with minimal movement, detect which card was tapped
+    if (touchDuration < 300 && totalMove < dragThreshold && touchStart) {
+      // Find which element was tapped
+      const element = document.elementFromPoint(touchStart.x, touchStart.y);
+      if (element) {
+        // Traverse up to find the option card
+        let target = element;
+        while (target && target !== cardRef.current) {
+          if (target.dataset && target.dataset.optionIndex !== undefined) {
+            const index = parseInt(target.dataset.optionIndex, 10);
+            triggerSelection(index, index === 0 ? 'left' : 'right');
+            resetTouchState();
+            return;
+          }
+          target = target.parentElement;
+        }
+      }
+      // No card found, just reset
+      resetTouchState();
       return;
     }
 
-    if (!touchStart || !touchEnd) {
-      setIsDragging(false);
-      setSwipeOffset({ x: 0, y: 0 });
+    // Handle swipe gestures
+    if (!touchStart || !touchEnd || !isDragging) {
+      resetTouchState();
       return;
     }
 
@@ -583,9 +608,14 @@ const SwipeableCard = ({ question, onChoice, currentIndex }) => {
       setSwipeOffset({ x: 0, y: 0 });
     }
 
+    resetTouchState();
+  };
+
+  const resetTouchState = () => {
     setIsDragging(false);
     setTouchStart(null);
     setTouchEnd(null);
+    setSwipeOffset({ x: 0, y: 0 });
   };
 
   const triggerSelection = (choice, direction) => {
@@ -704,8 +734,8 @@ const SwipeableCard = ({ question, onChoice, currentIndex }) => {
   const SwipeCard = () => (
     <div
       ref={cardRef}
-      className={`relative bg-gray-900 border-2 border-gray-800 rounded-xl p-4 touch-pan-y ${getExitClass()}`}
-      style={getCardStyle()}
+      className={`relative bg-gray-900 border-2 border-gray-800 rounded-xl p-4 ${getExitClass()}`}
+      style={{ ...getCardStyle(), touchAction: 'manipulation' }}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -743,18 +773,20 @@ const SwipeableCard = ({ question, onChoice, currentIndex }) => {
         {question.options.map((option, idx) => (
           <div
             key={idx}
+            data-option-index={idx}
             onClick={() => handleCardClick(idx)}
             className={`bg-gray-800/50 rounded-lg p-3 cursor-pointer border-2 transition-all
               ${selectedCard === idx ? 'border-red-600 bg-red-600/10' : 'border-transparent hover:border-gray-600'}`}
+            style={{ touchAction: 'manipulation' }}
           >
-            <h4 className="text-gray-500 font-bold uppercase text-xs mb-2">
+            <h4 className="text-gray-500 font-bold uppercase text-xs mb-2" data-option-index={idx}>
               Option {idx === 0 ? 'A' : 'B'}
             </h4>
-            <div className="text-2xl font-black text-white italic mb-2">
+            <div className="text-2xl font-black text-white italic mb-2" data-option-index={idx}>
               {decode(option.price, 'price')}
               <span className="text-gray-500 text-xs font-normal">/mo</span>
             </div>
-            <div className="space-y-1 text-xs">
+            <div className="space-y-1 text-xs" data-option-index={idx}>
               <div className="text-white font-semibold">{decode(option.count, 'count')}</div>
               <div className="text-gray-400">{decode(option.booking, 'booking')}</div>
               <div className="text-gray-400">{decode(option.guest, 'guest')}</div>
@@ -767,7 +799,7 @@ const SwipeableCard = ({ question, onChoice, currentIndex }) => {
       {/* Swipe hint */}
       <div className="mt-4 text-center text-gray-500 text-xs uppercase tracking-wide flex items-center justify-center gap-2">
         <ChevronLeft className="w-4 h-4 animate-swipe-hint" style={{ animationDirection: 'reverse' }} />
-        <span>Swipe to choose</span>
+        <span>Swipe or tap to choose</span>
         <ChevronRight className="w-4 h-4 animate-swipe-hint" />
       </div>
     </div>
