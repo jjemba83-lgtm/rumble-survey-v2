@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Trophy, MapPin, User, Check, AlertCircle } from 'lucide-react';
 
+// Environment variable to allow multiple submissions (for testing)
+// Set VITE_ALLOW_MULTIPLE_SUBMISSIONS=true in Vercel to bypass duplicate check
+const ALLOW_MULTIPLE_SUBMISSIONS = import.meta.env.VITE_ALLOW_MULTIPLE_SUBMISSIONS === 'true';
+
 // --- DATA: NEW GEMINI HERO ALTERNATIVE COMBINES PRICING AND CLASSES,   CONSOLIDATES AMMENITIES TO SINGLE ATTRIBUTE ---
 // Note: Prices converted from "P_269" format to integer 269 for consistency
 const RAW_DATA = [
@@ -1680,10 +1684,13 @@ export default function RumbleSurveyApp() {
     setSurveySet(shuffled.slice(0, 8));
 
     // 2. Check Local Storage (The Digital Handstamp)
-    const hasVoted = localStorage.getItem('rumble_voted');
-    if (hasVoted) {
-      setScreen('already-voted');
-      return;
+    // Skip check if ALLOW_MULTIPLE_SUBMISSIONS is enabled (for testing)
+    if (!ALLOW_MULTIPLE_SUBMISSIONS) {
+      const hasVoted = localStorage.getItem('rumble_voted');
+      if (hasVoted) {
+        setScreen('already-voted');
+        return;
+      }
     }
 
     // 3. Check URL Params for "Smart Link" (e.g. ?user=email@gmail.com)
@@ -1729,7 +1736,10 @@ export default function RumbleSurveyApp() {
   const handlePersonalizedSubmit = (response, question, insight) => {
     setPersonalizedResponse({ response, question, insight });
     setScreen('thank');
-    localStorage.setItem('rumble_voted', 'true');
+    // Only set voted flag if multiple submissions are not allowed
+    if (!ALLOW_MULTIPLE_SUBMISSIONS) {
+      localStorage.setItem('rumble_voted', 'true');
+    }
     console.log("Survey Complete with Personalized Response:", {
       user,
       answers,
@@ -1743,7 +1753,10 @@ export default function RumbleSurveyApp() {
   // Handle skip personalized question
   const handlePersonalizedSkip = useCallback(() => {
     setScreen('thank');
-    localStorage.setItem('rumble_voted', 'true');
+    // Only set voted flag if multiple submissions are not allowed
+    if (!ALLOW_MULTIPLE_SUBMISSIONS) {
+      localStorage.setItem('rumble_voted', 'true');
+    }
     console.log("Survey Complete (skipped personalized):", { user, answers, patterns });
   }, [user, answers, patterns]);
 
