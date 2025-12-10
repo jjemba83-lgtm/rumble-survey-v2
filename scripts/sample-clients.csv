@@ -1,0 +1,5 @@
+email,phone,name,firstName,lastName,location,memberStatus
+jane@example.com,555-123-4567,Jane Doe,Jane,Doe,Montclair,Current Member
+john@example.com,555-234-5678,John Smith,John,Smith,Livingston,Prior Member
+mary@example.com,,Mary Johnson,Mary,Johnson,Short Hills,Pack Holder
+,555-345-6789,Bob Wilson,Bob,Wilson,Montclair,Never Rumbled

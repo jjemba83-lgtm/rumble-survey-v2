@@ -5,6 +5,10 @@ import { Trophy, MapPin, User, Check, AlertCircle } from 'lucide-react';
 // Set VITE_ALLOW_MULTIPLE_SUBMISSIONS=true in Vercel to bypass duplicate check
 const ALLOW_MULTIPLE_SUBMISSIONS = import.meta.env.VITE_ALLOW_MULTIPLE_SUBMISSIONS === 'true';
 
+// Environment variable to require token-based authentication
+// Set VITE_REQUIRE_TOKEN=true in Vercel to require valid invitation tokens
+const REQUIRE_TOKEN = import.meta.env.VITE_REQUIRE_TOKEN === 'true';
+
 // --- DATA: NEW GEMINI HERO ALTERNATIVE COMBINES PRICING AND CLASSES,   CONSOLIDATES AMMENITIES TO SINGLE ATTRIBUTE ---
 // Note: Prices converted from "P_269" format to integer 269 for consistency
 const RAW_DATA = [
@@ -1102,6 +1106,29 @@ const AlreadyVotedScreen = () => (
   </div>
 );
 
+const InvalidTokenScreen = ({ errorMessage }) => (
+  <div className="flex flex-col items-center justify-center h-full p-6 text-center space-y-8 animate-fade-in">
+    <AlertCircle className="w-24 h-24 text-red-600 mb-4" />
+    <h1 className="text-5xl md:text-6xl font-black italic tracking-tighter text-white uppercase" style={{fontFamily: 'Impact, sans-serif'}}>
+      INVALID<br/>INVITATION
+    </h1>
+    <p className="text-gray-300 text-lg max-w-md">
+      {errorMessage || "This survey link is invalid or has expired. Please check your email for a valid invitation link."}
+    </p>
+    <div className="mt-8 p-4 bg-gray-900 rounded border border-gray-700">
+      <p className="text-xs text-gray-500 uppercase font-bold">Need help?</p>
+      <p className="text-sm text-white">Contact front desk at your studio for a new invitation.</p>
+    </div>
+  </div>
+);
+
+const ValidatingScreen = () => (
+  <div className="flex flex-col items-center justify-center h-full p-6 text-center space-y-8 animate-fade-in">
+    <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+    <p className="text-gray-300 text-lg">Validating your invitation...</p>
+  </div>
+);
+
 const DemoScreen = ({ user, setUser, onSubmit }) => (
   <div className="flex flex-col items-center justify-center h-full p-6 space-y-6 w-full max-w-md mx-auto animate-fade-in">
     <h2 className="text-3xl font-black uppercase italic text-white text-center">Tale of the Tape</h2>
@@ -1669,15 +1696,17 @@ const PersonalizedQuestionScreen = ({ patterns, user, onSubmit, onSkip }) => {
 
 
 export default function RumbleSurveyApp() {
-  const [screen, setScreen] = useState('welcome'); // welcome, demo, survey, personalized, thank, already-voted
+  const [screen, setScreen] = useState('welcome'); // welcome, validating, invalid-token, demo, survey, personalized, thank, already-voted
   const [user, setUser] = useState({ location: '', status: '', identifier: '', isFromUrl: false });
   const [surveySet, setSurveySet] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [patterns, setPatterns] = useState(null);
   const [personalizedResponse, setPersonalizedResponse] = useState(null);
+  const [token, setToken] = useState(null);
+  const [tokenError, setTokenError] = useState(null);
 
-  // Initialize: Select 8 random questions AND Check for URL Params/Local Storage
+  // Initialize: Select 8 random questions AND Check for URL Params/Local Storage/Token
   useEffect(() => {
     // 1. Shuffle Questions
     const shuffled = [...RAW_DATA].sort(() => 0.5 - Math.random());
@@ -1693,12 +1722,82 @@ export default function RumbleSurveyApp() {
       }
     }
 
-    // 3. Check URL Params for "Smart Link" (e.g. ?user=email@gmail.com)
+    // 3. Check URL Params for token or "Smart Link"
     const params = new URLSearchParams(window.location.search);
+    const urlToken = params.get('token');
     const userId = params.get('user') || params.get('id') || params.get('email');
-    
-    if (userId) {
-      setUser(prev => ({ ...prev, identifier: userId, isFromUrl: true }));
+
+    // 4. Token-based authentication flow
+    if (REQUIRE_TOKEN) {
+      if (!urlToken) {
+        setTokenError('No invitation token provided. Please use the link from your email.');
+        setScreen('invalid-token');
+        return;
+      }
+
+      // Validate token with backend
+      setScreen('validating');
+      setToken(urlToken);
+
+      fetch('/api/validate-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: urlToken })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.valid) {
+            // Pre-fill user info from invitation
+            setUser(prev => ({
+              ...prev,
+              identifier: data.client?.email || data.client?.phone || '',
+              location: data.client?.location || '',
+              status: data.client?.memberStatus || '',
+              name: data.client?.name || '',
+              firstName: data.client?.firstName || '',
+              lastName: data.client?.lastName || '',
+              isFromUrl: true
+            }));
+            setScreen('welcome');
+          } else {
+            setTokenError(data.error || 'Invalid invitation token');
+            setScreen('invalid-token');
+          }
+        })
+        .catch(err => {
+          console.error('Token validation error:', err);
+          setTokenError('Unable to validate invitation. Please try again.');
+          setScreen('invalid-token');
+        });
+    } else {
+      // Non-token mode: use Smart Link if provided
+      if (urlToken) {
+        // Even if not required, still validate if token is provided
+        setToken(urlToken);
+        fetch('/api/validate-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: urlToken })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.valid && data.client) {
+              setUser(prev => ({
+                ...prev,
+                identifier: data.client?.email || data.client?.phone || prev.identifier,
+                location: data.client?.location || prev.location,
+                status: data.client?.memberStatus || prev.status,
+                name: data.client?.name || '',
+                firstName: data.client?.firstName || '',
+                lastName: data.client?.lastName || '',
+                isFromUrl: true
+              }));
+            }
+          })
+          .catch(err => console.error('Token validation error (non-blocking):', err));
+      } else if (userId) {
+        setUser(prev => ({ ...prev, identifier: userId, isFromUrl: true }));
+      }
     }
   }, []);
 
@@ -1732,6 +1831,32 @@ export default function RumbleSurveyApp() {
     }
   };
 
+  // Submit survey to Firebase
+  const submitSurveyToFirebase = async (personalizedQ = null, personalizedR = null) => {
+    try {
+      const response = await fetch('/api/submit-survey', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          user,
+          answers,
+          patterns,
+          personalizedQuestion: personalizedQ,
+          personalizedResponse: personalizedR
+        })
+      });
+      const data = await response.json();
+      if (data.success) {
+        console.log('Survey submitted to Firebase:', data.submissionId);
+      } else {
+        console.error('Survey submission failed:', data.error);
+      }
+    } catch (err) {
+      console.error('Survey submission error:', err);
+    }
+  };
+
   // Handle personalized question submission
   const handlePersonalizedSubmit = (response, question, insight) => {
     setPersonalizedResponse({ response, question, insight });
@@ -1740,6 +1865,8 @@ export default function RumbleSurveyApp() {
     if (!ALLOW_MULTIPLE_SUBMISSIONS) {
       localStorage.setItem('rumble_voted', 'true');
     }
+    // Submit to Firebase
+    submitSurveyToFirebase(question, response);
     console.log("Survey Complete with Personalized Response:", {
       user,
       answers,
@@ -1757,8 +1884,10 @@ export default function RumbleSurveyApp() {
     if (!ALLOW_MULTIPLE_SUBMISSIONS) {
       localStorage.setItem('rumble_voted', 'true');
     }
+    // Submit to Firebase (without personalized response)
+    submitSurveyToFirebase(null, null);
     console.log("Survey Complete (skipped personalized):", { user, answers, patterns });
-  }, [user, answers, patterns]);
+  }, [user, answers, patterns, token]);
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-red-600 selection:text-white">
@@ -1769,6 +1898,8 @@ export default function RumbleSurveyApp() {
 
       {/* Main Content Area */}
       <main className="container mx-auto h-[calc(100vh-80px)] overflow-y-auto">
+        {screen === 'validating' && <ValidatingScreen />}
+        {screen === 'invalid-token' && <InvalidTokenScreen errorMessage={tokenError} />}
         {screen === 'welcome' && <WelcomeScreen onStart={handleStart} />}
         {screen === 'already-voted' && <AlreadyVotedScreen />}
         {screen === 'demo' && (
