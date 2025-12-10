@@ -1,15 +1,7 @@
 // Vercel Serverless Function - Generates personalized follow-up question based on CBC patterns
-// Environment variable required: OPENAI_API_KEY (set in Vercel Dashboard or .env.local for local dev)
+// Environment variable required: OPENAI_API_KEY (set in Vercel Dashboard)
 
-// Load .env.local for local development (CommonJS for Vercel compatibility)
-try {
-  require('dotenv').config({ path: require('path').resolve(process.cwd(), '.env.local') });
-  require('dotenv').config({ path: require('path').resolve(process.cwd(), '.env') });
-} catch (e) {
-  // dotenv not available in production, that's fine
-}
-
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
