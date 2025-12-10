@@ -137,12 +137,12 @@ body {
   animation: trophyBounce 1s ease-in-out;
 }
 
-/* Swipe hint animation for mobile */
-@keyframes swipeHint {
-  0%, 100% { transform: translateX(0); opacity: 0.5; }
-  50% { transform: translateX(10px); opacity: 1; }
-}
-
-.animate-swipe-hint {
-  animation: swipeHint 1.5s ease-in-out infinite;
+/* Landscape orientation support for mobile cards */
+@media (orientation: landscape) and (max-width: 1024px) {
+  .landscape\:flex-row {
+    flex-direction: row !important;
+  }
+  .landscape\:gap-3 {
+    gap: 0.75rem !important;
+  }
 }

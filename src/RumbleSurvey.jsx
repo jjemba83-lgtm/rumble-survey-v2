@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Trophy, MapPin, User, Check, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trophy, MapPin, User, Check, AlertCircle } from 'lucide-react';
 
 // --- DATA: NEW GEMINI HERO ALTERNATIVE COMBINES PRICING AND CLASSES,   CONSOLIDATES AMMENITIES TO SINGLE ATTRIBUTE ---
 // Note: Prices converted from "P_269" format to integer 269 for consistency
@@ -1029,12 +1029,29 @@ const RAW_DATA = [
 // Helper to decode CSV-style codes to Human Readable text
 const decode = (code, type) => {
   const map = {
-    tier: { T_4: '$119 (4 Classes/Month)', T_8: '$179 (8 Classes/Month)', T_12: '$219 (12 Classes/Month)', T_Unl: '$249 (Unlimitted Classes)' },
-    hero: { 'H_None': 'No Perks :(', 'H_GUESTS': '2 Guest Passes/Month!', 'H_RECOVERY': 'Recovery Lounge Access!', 'H_CHILDCARE': 'Childcare while you exercise!' },
+    tier: {
+      T_4: '$119 (4 Classes/Month)',
+      T_8: '$179 (8 Classes/Month)',
+      T_12: '$219 (12 Classes/Month)',
+      T_Unl: '$249 (Unlimited Classes)'
+    },
+    tierPrice: { T_4: '$119', T_8: '$179', T_12: '$219', T_Unl: '$249' },
+    tierClasses: { T_4: '4 Classes/Month', T_8: '8 Classes/Month', T_12: '12 Classes/Month', T_Unl: 'Unlimited Classes' },
+    hero: {
+      'H_None': 'No Perks',
+      'H_GUESTS': '2 Guest Passes/Month',
+      'H_RECOVERY': 'Recovery Lounge Access',
+      'H_CHILDCARE': 'Childcare Included'
+    },
     booking: { 'B_7D': '7-Day Booking', 'B_14D': '14-Day Booking', 'B_30D': '30-Day Booking' },
-    commitment: { 'C_1M': 'Month to Month', 'C_3M': '3 Month Term', 'C_6M': '6 Month Term', 'C_12M': '12 Month Term' },
+    commitment: {
+      'C_1M': 'Month-to-Month (Standard Rate)',
+      'C_3M': '3-Month Commitment (Save 5%)',
+      'C_6M': '6-Month Commitment (Save 10%)',
+      'C_12M': '12-Month Commitment (Save 15%)'
+    },
   };
-  return map[type][code] || code;
+  return map[type]?.[code] || code;
 };
 
 // --- SUB-COMPONENTS (Defined OUTSIDE to prevent re-render focus bugs) ---
@@ -1174,182 +1191,25 @@ const ProgressBar = ({ current, total }) => {
   );
 };
 
-// Swipe Card Component for Mobile
+// Survey Card Component - Tap/Click only (no swiping)
 const SwipeableCard = ({ question, onChoice, currentIndex }) => {
-  const cardRef = useRef(null);
-  const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
-  const [swipeOffset, setSwipeOffset] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [exitAnimation, setExitAnimation] = useState(null); // 'left', 'right', 'down', or null
   const [selectedCard, setSelectedCard] = useState(null); // 0, 1, or null for pulse effect
 
-  // Minimum swipe distance to trigger action
-  const minSwipeDistance = 80;
-
-  // Threshold to distinguish tap from drag (in pixels)
-  const dragThreshold = 15;
-
-  // Track touch start time for tap detection
-  const touchStartTime = useRef(0);
-
-  const onTouchStart = (e) => {
-    touchStartTime.current = Date.now();
-    setTouchEnd(null);
-    setTouchStart({
-      x: e.targetTouches[0].clientX,
-      y: e.targetTouches[0].clientY
-    });
-    setIsDragging(false);
-  };
-
-  const onTouchMove = (e) => {
-    if (!touchStart) return;
-
-    const currentX = e.targetTouches[0].clientX;
-    const currentY = e.targetTouches[0].clientY;
-    const deltaX = currentX - touchStart.x;
-    const deltaY = currentY - touchStart.y;
-
-    // Only start "dragging" mode if moved beyond threshold
-    if (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold) {
-      setIsDragging(true);
-    }
-
-    setTouchEnd({ x: currentX, y: currentY });
-    setSwipeOffset({ x: deltaX, y: deltaY });
-  };
-
-  const onTouchEnd = (e) => {
-    const touchDuration = Date.now() - touchStartTime.current;
-
-    // Calculate total movement
-    const totalMove = touchEnd
-      ? Math.abs(touchEnd.x - touchStart?.x || 0) + Math.abs(touchEnd.y - touchStart?.y || 0)
-      : 0;
-
-    // If it was a quick tap with minimal movement, detect which card was tapped
-    if (touchDuration < 300 && totalMove < dragThreshold && touchStart) {
-      // Find which element was tapped
-      const element = document.elementFromPoint(touchStart.x, touchStart.y);
-      if (element) {
-        // Traverse up to find the option card
-        let target = element;
-        while (target && target !== cardRef.current) {
-          if (target.dataset && target.dataset.optionIndex !== undefined) {
-            const index = parseInt(target.dataset.optionIndex, 10);
-            triggerSelection(index, index === 0 ? 'left' : 'right');
-            resetTouchState();
-            return;
-          }
-          target = target.parentElement;
-        }
-      }
-      // No card found, just reset
-      resetTouchState();
-      return;
-    }
-
-    // Handle swipe gestures
-    if (!touchStart || !touchEnd || !isDragging) {
-      resetTouchState();
-      return;
-    }
-
-    const distanceX = touchEnd.x - touchStart.x;
-    const distanceY = touchEnd.y - touchStart.y;
-    const isHorizontalSwipe = Math.abs(distanceX) > Math.abs(distanceY);
-
-    if (isHorizontalSwipe && Math.abs(distanceX) > minSwipeDistance) {
-      // Horizontal swipe detected
-      if (distanceX < 0) {
-        // Swipe LEFT = Option A
-        triggerSelection(0, 'left');
-      } else {
-        // Swipe RIGHT = Option B
-        triggerSelection(1, 'right');
-      }
-    } else if (!isHorizontalSwipe && distanceY > minSwipeDistance) {
-      // Swipe DOWN = Neither
-      triggerSelection(-1, 'down');
-    } else {
-      // Not enough distance, reset
-      setSwipeOffset({ x: 0, y: 0 });
-    }
-
-    resetTouchState();
-  };
-
-  const resetTouchState = () => {
-    setIsDragging(false);
-    setTouchStart(null);
-    setTouchEnd(null);
-    setSwipeOffset({ x: 0, y: 0 });
-  };
-
-  const triggerSelection = (choice, direction) => {
-    setSelectedCard(choice >= 0 ? choice : null);
-    setExitAnimation(direction);
-
-    // Wait for animation to complete before calling onChoice
-    setTimeout(() => {
-      setExitAnimation(null);
-      setSelectedCard(null);
-      setSwipeOffset({ x: 0, y: 0 });
-      onChoice(choice);
-    }, 400);
-  };
-
-  // Handle click/tap selection (for desktop and tap on mobile)
+  // Handle click/tap selection
   const handleCardClick = (index) => {
-    const direction = index === 0 ? 'left' : 'right';
-    triggerSelection(index, direction);
+    setSelectedCard(index);
+    // Brief delay for visual feedback before transitioning
+    setTimeout(() => {
+      setSelectedCard(null);
+      onChoice(index);
+    }, 300);
   };
 
   const handleNeitherClick = () => {
-    triggerSelection(-1, 'down');
-  };
-
-  // Calculate rotation based on swipe offset
-  const getCardStyle = () => {
-    if (exitAnimation) {
-      return {}; // Let CSS animation handle it
-    }
-
-    if (!isDragging) {
-      return { transform: 'translateX(0) rotate(0deg)', transition: 'transform 0.3s ease-out' };
-    }
-
-    const rotation = swipeOffset.x * 0.05; // Subtle rotation
-    const maxRotation = 15;
-    const clampedRotation = Math.max(-maxRotation, Math.min(maxRotation, rotation));
-
-    return {
-      transform: `translateX(${swipeOffset.x}px) translateY(${Math.max(0, swipeOffset.y * 0.3)}px) rotate(${clampedRotation}deg)`,
-      transition: 'none'
-    };
-  };
-
-  // Get swipe indicator opacity based on swipe distance
-  const getIndicatorOpacity = (direction) => {
-    if (!isDragging) return 0;
-
-    const threshold = minSwipeDistance;
-    if (direction === 'left') {
-      return Math.min(1, Math.max(0, -swipeOffset.x / threshold));
-    } else if (direction === 'right') {
-      return Math.min(1, Math.max(0, swipeOffset.x / threshold));
-    } else if (direction === 'down') {
-      return Math.min(1, Math.max(0, swipeOffset.y / threshold));
-    }
-    return 0;
-  };
-
-  const getExitClass = () => {
-    if (exitAnimation === 'left') return 'animate-fly-left';
-    if (exitAnimation === 'right') return 'animate-fly-right';
-    if (exitAnimation === 'down') return 'animate-fly-down';
-    return '';
+    // No visual selection for neither
+    setTimeout(() => {
+      onChoice(-1);
+    }, 150);
   };
 
   if (!question) return <div>Loading...</div>;
@@ -1367,7 +1227,7 @@ const SwipeableCard = ({ question, onChoice, currentIndex }) => {
 
       <div className="space-y-4">
         <div className="flex items-baseline space-x-1">
-          <span className="text-4xl font-black text-white italic">{decode(data.price, 'price')}</span>
+          <span className="text-4xl font-black text-white italic">{decode(data.tier, 'tierPrice')}</span>
           <span className="text-gray-400 text-sm font-medium">/ month</span>
         </div>
 
@@ -1376,7 +1236,7 @@ const SwipeableCard = ({ question, onChoice, currentIndex }) => {
         <ul className="space-y-3">
           <li className="flex items-center space-x-3">
             <div className="w-1 h-1 bg-red-500 rounded-full" />
-            <span className="text-white font-bold uppercase">{decode(data.count, 'count')}</span>
+            <span className="text-white font-bold uppercase">{decode(data.tier, 'tierClasses')}</span>
           </li>
           <li className="flex items-center space-x-3">
             <div className="w-1 h-1 bg-red-500 rounded-full" />
@@ -1384,11 +1244,11 @@ const SwipeableCard = ({ question, onChoice, currentIndex }) => {
           </li>
           <li className="flex items-center space-x-3">
             <div className="w-1 h-1 bg-red-500 rounded-full" />
-            <span className="text-gray-300 text-sm">{decode(data.guest, 'guest')}</span>
+            <span className="text-gray-300 text-sm">{decode(data.commitment, 'commitment')}</span>
           </li>
           <li className="flex items-center space-x-3">
             <div className="w-1 h-1 bg-red-500 rounded-full" />
-            <span className="text-yellow-500 text-sm font-bold">{decode(data.perks, 'perks')}</span>
+            <span className="text-yellow-500 text-sm font-bold">{decode(data.hero, 'hero')}</span>
           </li>
         </ul>
       </div>
@@ -1399,78 +1259,65 @@ const SwipeableCard = ({ question, onChoice, currentIndex }) => {
     </div>
   );
 
-  // Combined card for mobile swipe
-  const SwipeCard = () => (
-    <div
-      ref={cardRef}
-      className={`relative bg-gray-900 border-2 border-gray-800 rounded-xl p-4 ${getExitClass()}`}
-      style={{ ...getCardStyle(), touchAction: 'manipulation' }}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-    >
-      {/* Swipe direction indicators */}
-      <div
-        className="absolute inset-0 bg-red-600/20 rounded-xl flex items-center justify-start pl-4 pointer-events-none transition-opacity"
-        style={{ opacity: getIndicatorOpacity('left') }}
-      >
-        <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold uppercase text-sm flex items-center gap-2">
-          <ChevronLeft className="w-5 h-5" /> Option A
-        </div>
-      </div>
-
-      <div
-        className="absolute inset-0 bg-red-600/20 rounded-xl flex items-center justify-end pr-4 pointer-events-none transition-opacity"
-        style={{ opacity: getIndicatorOpacity('right') }}
-      >
-        <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold uppercase text-sm flex items-center gap-2">
-          Option B <ChevronRight className="w-5 h-5" />
-        </div>
-      </div>
-
-      <div
-        className="absolute inset-0 bg-gray-600/20 rounded-xl flex items-end justify-center pb-4 pointer-events-none transition-opacity"
-        style={{ opacity: getIndicatorOpacity('down') }}
-      >
-        <div className="bg-gray-600 text-white px-4 py-2 rounded-lg font-bold uppercase text-sm">
-          Neither
-        </div>
-      </div>
-
-      {/* Card Content - Side by side comparison */}
-      <div className="grid grid-cols-2 gap-3">
+  // Mobile Card Component - Responsive: stacked in portrait, side-by-side in landscape
+  const MobileCard = () => (
+    <div className="space-y-3">
+      {/* Portrait: stacked vertically, Landscape: side-by-side */}
+      <div className="flex flex-col landscape:flex-row landscape:gap-3 gap-3">
         {question.options.map((option, idx) => (
           <div
             key={idx}
-            data-option-index={idx}
             onClick={() => handleCardClick(idx)}
-            className={`bg-gray-800/50 rounded-lg p-3 cursor-pointer border-2 transition-all
-              ${selectedCard === idx ? 'border-red-600 bg-red-600/10' : 'border-transparent hover:border-gray-600'}`}
-            style={{ touchAction: 'manipulation' }}
+            className={`bg-gray-900 border-2 rounded-xl p-4 cursor-pointer transition-all flex-1
+              ${selectedCard === idx ? 'border-red-600 bg-red-600/10 animate-selection-pulse' : 'border-gray-700 hover:border-gray-500 active:border-red-600'}`}
           >
-            <h4 className="text-gray-500 font-bold uppercase text-xs mb-2" data-option-index={idx}>
-              Option {idx === 0 ? 'A' : 'B'}
-            </h4>
-            <div className="text-2xl font-black text-white italic mb-2" data-option-index={idx}>
-              {decode(option.price, 'price')}
-              <span className="text-gray-500 text-xs font-normal">/mo</span>
+            <div className="flex justify-between items-start mb-3">
+              <h4 className="text-gray-500 font-bold uppercase text-xs tracking-wider">
+                Option {idx === 0 ? 'A' : 'B'}
+              </h4>
+              <div className="bg-gray-800 text-gray-400 px-2 py-1 rounded text-xs font-bold">
+                TAP TO SELECT
+              </div>
             </div>
-            <div className="space-y-1 text-xs" data-option-index={idx}>
-              <div className="text-white font-semibold">{decode(option.count, 'count')}</div>
-              <div className="text-gray-400">{decode(option.booking, 'booking')}</div>
-              <div className="text-gray-400">{decode(option.guest, 'guest')}</div>
-              <div className="text-yellow-500 font-semibold">{decode(option.perks, 'perks')}</div>
+
+            <div className="flex items-baseline gap-1 mb-3">
+              <span className="text-3xl font-black text-white italic">{decode(option.tier, 'tierPrice')}</span>
+              <span className="text-gray-500 text-sm font-normal">/mo</span>
+            </div>
+
+            <div className="h-px bg-gray-800 w-full mb-3" />
+
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                <span className="text-white font-bold">{decode(option.tier, 'tierClasses')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                <span className="text-gray-300">{decode(option.booking, 'booking')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                <span className="text-gray-300">{decode(option.commitment, 'commitment')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full" />
+                <span className="text-yellow-500 font-semibold">{decode(option.hero, 'hero')}</span>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Swipe hint */}
-      <div className="mt-4 text-center text-gray-500 text-xs uppercase tracking-wide flex items-center justify-center gap-2">
-        <ChevronLeft className="w-4 h-4 animate-swipe-hint" style={{ animationDirection: 'reverse' }} />
-        <span>Swipe or tap to choose</span>
-        <ChevronRight className="w-4 h-4 animate-swipe-hint" />
-      </div>
+      {/* Prominent Neither Button */}
+      <button
+        onClick={handleNeitherClick}
+        className="w-full py-4 bg-gray-800 hover:bg-gray-700 active:bg-gray-600 border-2 border-gray-600 rounded-xl text-gray-300 font-bold uppercase tracking-wider text-sm transition-all"
+      >
+        Neither of These
+      </button>
+
+      <p className="text-center text-gray-600 text-xs">Tap a plan to select it</p>
     </div>
   );
 
@@ -1493,29 +1340,31 @@ const SwipeableCard = ({ question, onChoice, currentIndex }) => {
         Which membership would you choose?
       </p>
 
-      {/* Mobile: Swipeable stacked card */}
+      {/* Mobile: Tap-to-select cards (stacked portrait, side-by-side landscape) */}
       <div className="md:hidden mb-6">
-        <SwipeCard />
+        <MobileCard />
       </div>
 
       {/* Desktop: Side by side cards */}
-      <div className="hidden md:flex flex-row gap-4 mb-8">
-        <OptionCard data={question.options[0]} index={0} />
+      <div className="hidden md:flex flex-col gap-4 mb-8">
+        <div className="flex flex-row gap-4">
+          <OptionCard data={question.options[0]} index={0} />
 
-        <div className="flex items-center justify-center font-black text-gray-700 italic text-2xl px-4">
-          VS
+          <div className="flex items-center justify-center font-black text-gray-700 italic text-2xl px-4">
+            VS
+          </div>
+
+          <OptionCard data={question.options[1]} index={1} />
         </div>
 
-        <OptionCard data={question.options[1]} index={1} />
-      </div>
-
-      <div className="flex justify-center">
-        <button
-          onClick={handleNeitherClick}
-          className="text-gray-500 hover:text-white border-b border-gray-600 hover:border-white pb-1 transition-colors text-sm uppercase tracking-widest font-bold"
-        >
-          I wouldn't choose either of these
-        </button>
+        <div className="flex justify-center">
+          <button
+            onClick={handleNeitherClick}
+            className="text-gray-500 hover:text-white border-b border-gray-600 hover:border-white pb-1 transition-colors text-sm uppercase tracking-widest font-bold"
+          >
+            I wouldn't choose either of these
+          </button>
+        </div>
       </div>
     </div>
   );
