@@ -1455,13 +1455,223 @@ const ThankYouScreen = ({ user }) => {
   );
 };
 
+// Analyze CBC choice patterns to extract insights
+const analyzePatterns = (answers, surveySet) => {
+  const patterns = {
+    pricePreference: 'mixed',
+    commitmentPreference: 'mixed',
+    heroPreference: 'mixed',
+    bookingPreference: 'mixed',
+    neitherCount: 0,
+    totalChoices: answers.length,
+    choiceDetails: []
+  };
+
+  // Tier price mapping for analysis
+  const tierPrices = { T_4: 119, T_8: 179, T_12: 219, T_Unl: 249 };
+  const commitmentMonths = { C_1M: 1, C_3M: 3, C_6M: 6, C_12M: 12 };
+
+  let lowPriceCount = 0;
+  let highPriceCount = 0;
+  let flexibleCount = 0;
+  let committedCount = 0;
+  const heroChoices = {};
+  let shortBookingCount = 0;
+  let longBookingCount = 0;
+
+  answers.forEach((answer, idx) => {
+    const question = surveySet.find(q => q.id === answer.questionId);
+    if (!question) return;
+
+    if (answer.choice === -1) {
+      patterns.neitherCount++;
+      patterns.choiceDetails.push({ questionId: answer.questionId, choice: 'neither', option: null });
+      return;
+    }
+
+    const chosenOption = question.options[answer.choice];
+    if (!chosenOption) return;
+
+    patterns.choiceDetails.push({
+      questionId: answer.questionId,
+      choice: answer.choice === 0 ? 'A' : 'B',
+      option: chosenOption
+    });
+
+    // Analyze tier/price preference
+    const price = tierPrices[chosenOption.tier] || 0;
+    if (price <= 179) lowPriceCount++;
+    else highPriceCount++;
+
+    // Analyze commitment preference
+    const months = commitmentMonths[chosenOption.commitment] || 1;
+    if (months <= 3) flexibleCount++;
+    else committedCount++;
+
+    // Analyze hero perk preference
+    const hero = chosenOption.hero;
+    heroChoices[hero] = (heroChoices[hero] || 0) + 1;
+
+    // Analyze booking preference
+    if (chosenOption.booking === 'B_7D') shortBookingCount++;
+    else if (chosenOption.booking === 'B_30D') longBookingCount++;
+  });
+
+  // Determine preferences
+  const validChoices = answers.length - patterns.neitherCount;
+
+  if (validChoices > 0) {
+    // Price preference
+    if (lowPriceCount >= validChoices * 0.65) patterns.pricePreference = 'low';
+    else if (highPriceCount >= validChoices * 0.65) patterns.pricePreference = 'high';
+
+    // Commitment preference
+    if (flexibleCount >= validChoices * 0.65) patterns.commitmentPreference = 'flexible';
+    else if (committedCount >= validChoices * 0.65) patterns.commitmentPreference = 'committed';
+
+    // Hero preference - find most chosen
+    const heroEntries = Object.entries(heroChoices);
+    if (heroEntries.length > 0) {
+      const topHero = heroEntries.sort((a, b) => b[1] - a[1])[0];
+      if (topHero[1] >= validChoices * 0.4) {
+        patterns.heroPreference = topHero[0];
+      }
+    }
+
+    // Booking preference
+    if (shortBookingCount >= validChoices * 0.5) patterns.bookingPreference = 'short';
+    else if (longBookingCount >= validChoices * 0.5) patterns.bookingPreference = 'long';
+  }
+
+  return patterns;
+};
+
+// Personalized Question Screen - Calls LLM API
+const PersonalizedQuestionScreen = ({ patterns, user, onSubmit, onSkip }) => {
+  const [question, setQuestion] = useState('');
+  const [insight, setInsight] = useState('');
+  const [response, setResponse] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchQuestion = async () => {
+      try {
+        const res = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            patterns,
+            demographics: {
+              location: user.location,
+              status: user.status
+            }
+          })
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to generate question');
+        }
+
+        const data = await res.json();
+        setQuestion(data.question);
+        setInsight(data.insight);
+      } catch (err) {
+        console.error('Error fetching personalized question:', err);
+        setError('Could not load question');
+        // Auto-skip after error
+        setTimeout(() => onSkip(), 2000);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuestion();
+  }, [patterns, user, onSkip]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (response.trim()) {
+      onSubmit(response, question, insight);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-6 text-center space-y-6 animate-fade-in">
+        <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-gray-400 text-lg">Analyzing your choices...</p>
+        <p className="text-gray-600 text-sm">Creating a personalized question just for you</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-6 text-center space-y-6 animate-fade-in">
+        <p className="text-gray-400">{error}</p>
+        <p className="text-gray-600 text-sm">Continuing to results...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center h-full p-6 space-y-6 w-full max-w-lg mx-auto animate-fade-in">
+      <div className="text-center space-y-2">
+        <h2 className="text-3xl font-black italic text-white uppercase">One More Thing...</h2>
+        {insight && (
+          <p className="text-red-500 font-bold text-sm uppercase tracking-wider">{insight}</p>
+        )}
+      </div>
+
+      <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full">
+        <p className="text-white text-lg leading-relaxed">{question}</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="w-full space-y-4">
+        <textarea
+          value={response}
+          onChange={(e) => setResponse(e.target.value)}
+          placeholder="Share your thoughts..."
+          className="w-full bg-gray-900 text-white border border-gray-700 rounded-lg p-4 h-32 focus:border-red-600 focus:outline-none resize-none"
+          maxLength={500}
+        />
+
+        <div className="flex justify-between items-center text-xs text-gray-500">
+          <span>{response.length}/500</span>
+          <button
+            type="button"
+            onClick={onSkip}
+            className="hover:text-white transition-colors"
+          >
+            Skip this question
+          </button>
+        </div>
+
+        <button
+          type="submit"
+          disabled={!response.trim()}
+          className={`w-full py-4 font-black uppercase tracking-widest text-lg rounded-lg transition-all
+            ${response.trim()
+              ? 'bg-red-600 hover:bg-red-700 text-white cursor-pointer'
+              : 'bg-gray-800 text-gray-500 cursor-not-allowed'}`}
+        >
+          Submit & Finish
+        </button>
+      </form>
+    </div>
+  );
+};
+
 
 export default function RumbleSurveyApp() {
-  const [screen, setScreen] = useState('welcome'); // welcome, demo, survey, thank, already-voted
+  const [screen, setScreen] = useState('welcome'); // welcome, demo, survey, personalized, thank, already-voted
   const [user, setUser] = useState({ location: '', status: '', identifier: '', isFromUrl: false });
   const [surveySet, setSurveySet] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState([]);
+  const [patterns, setPatterns] = useState(null);
+  const [personalizedResponse, setPersonalizedResponse] = useState(null);
 
   // Initialize: Select 8 random questions AND Check for URL Params/Local Storage
   useEffect(() => {
@@ -1498,8 +1708,8 @@ export default function RumbleSurveyApp() {
   };
 
   const handleChoice = (choice) => {
-    const newAnswers = [...answers, { 
-      questionId: surveySet[currentIndex].id, 
+    const newAnswers = [...answers, {
+      questionId: surveySet[currentIndex].id,
       choice: choice // 0 (Option A), 1 (Option B), or -1 (None)
     }];
     setAnswers(newAnswers);
@@ -1507,12 +1717,35 @@ export default function RumbleSurveyApp() {
     if (currentIndex < 7) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      // Survey Complete
-      setScreen('thank');
-      localStorage.setItem('rumble_voted', 'true');
-      console.log("Survey Complete:", { user, data: newAnswers });
+      // Survey Complete - analyze patterns and go to personalized question
+      const analyzedPatterns = analyzePatterns(newAnswers, surveySet);
+      setPatterns(analyzedPatterns);
+      setScreen('personalized');
+      console.log("CBC Complete:", { user, answers: newAnswers, patterns: analyzedPatterns });
     }
   };
+
+  // Handle personalized question submission
+  const handlePersonalizedSubmit = (response, question, insight) => {
+    setPersonalizedResponse({ response, question, insight });
+    setScreen('thank');
+    localStorage.setItem('rumble_voted', 'true');
+    console.log("Survey Complete with Personalized Response:", {
+      user,
+      answers,
+      patterns,
+      personalizedQuestion: question,
+      personalizedResponse: response,
+      insight
+    });
+  };
+
+  // Handle skip personalized question
+  const handlePersonalizedSkip = useCallback(() => {
+    setScreen('thank');
+    localStorage.setItem('rumble_voted', 'true');
+    console.log("Survey Complete (skipped personalized):", { user, answers, patterns });
+  }, [user, answers, patterns]);
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-red-600 selection:text-white">
@@ -1526,17 +1759,25 @@ export default function RumbleSurveyApp() {
         {screen === 'welcome' && <WelcomeScreen onStart={handleStart} />}
         {screen === 'already-voted' && <AlreadyVotedScreen />}
         {screen === 'demo' && (
-          <DemoScreen 
-            user={user} 
-            setUser={setUser} 
-            onSubmit={handleDemoSubmit} 
+          <DemoScreen
+            user={user}
+            setUser={setUser}
+            onSubmit={handleDemoSubmit}
           />
         )}
         {screen === 'survey' && (
-          <SurveyScreen 
-            question={surveySet[currentIndex]} 
-            currentIndex={currentIndex} 
-            onChoice={handleChoice} 
+          <SurveyScreen
+            question={surveySet[currentIndex]}
+            currentIndex={currentIndex}
+            onChoice={handleChoice}
+          />
+        )}
+        {screen === 'personalized' && patterns && (
+          <PersonalizedQuestionScreen
+            patterns={patterns}
+            user={user}
+            onSubmit={handlePersonalizedSubmit}
+            onSkip={handlePersonalizedSkip}
           />
         )}
         {screen === 'thank' && <ThankYouScreen user={user} />}
