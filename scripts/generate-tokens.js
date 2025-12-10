@@ -2,25 +2,26 @@
 /**
  * Token Generation Script for Rumble Survey
  *
- * This script reads a CSV of clients and generates unique invitation tokens.
- * It can either output a new CSV for mail merge, or upload directly to Firebase.
+ * This script reads a CSV of clients and creates invitation tokens.
+ * Uses clientId as the token (if provided) or generates UUIDs.
  *
  * Usage:
  *   node scripts/generate-tokens.js input.csv [--upload]
  *
  * Input CSV format (columns):
+ *   clientId (optional - used as token if provided, otherwise UUID generated)
  *   email, phone, name, firstName, lastName, location, memberStatus
  *   (Only email OR phone is required, others are optional)
  *
  * Output:
- *   - Creates 'output-with-tokens.csv' with added 'token' and 'survey_link' columns
+ *   - Creates 'output-with-tokens.csv' with 'token' and 'survey_link' columns
  *   - If --upload flag is used, also uploads to Firebase Firestore
  *
  * Environment Variables (for --upload):
  *   FIREBASE_PROJECT_ID
  *   FIREBASE_CLIENT_EMAIL
  *   FIREBASE_PRIVATE_KEY
- *   SURVEY_BASE_URL (optional, defaults to http://localhost:5173)
+ *   SURVEY_BASE_URL (optional, defaults to https://your-survey.vercel.app)
  */
 
 import { randomUUID } from 'crypto';
@@ -39,8 +40,13 @@ Usage: node scripts/generate-tokens.js <input.csv> [--upload]
 Options:
   --upload    Upload tokens to Firebase Firestore
 
-Input CSV should have columns: email, phone, name, firstName, lastName, location, memberStatus
-(At minimum, email OR phone is required)
+Input CSV columns:
+  - clientId (optional - used as token if provided, otherwise UUID is generated)
+  - email (required if no phone)
+  - phone (required if no email)
+  - name, firstName, lastName (optional)
+  - location (optional)
+  - memberStatus (optional)
 
 Example:
   node scripts/generate-tokens.js clients.csv
@@ -119,9 +125,20 @@ async function main() {
     process.exit(1);
   }
 
+  // Check if clientId column exists
+  const hasClientId = clients.some(c => c.clientid || c.clientId || c.client_id || c.id);
+  if (hasClientId) {
+    console.log('✓ Using clientId column as token\n');
+  } else {
+    console.log('✓ No clientId column found - generating UUIDs\n');
+  }
+
   // Generate tokens for each client
   const invitations = clients.map(client => {
-    const token = randomUUID();
+    // Use clientId if available, otherwise generate UUID
+    const clientId = client.clientid || client.clientId || client.client_id || client.id || '';
+    const token = clientId || randomUUID();
+
     return {
       ...client,
       token,
@@ -131,11 +148,11 @@ async function main() {
     };
   });
 
-  console.log(`✨ Generated ${invitations.length} tokens\n`);
+  console.log(`✨ Prepared ${invitations.length} invitations\n`);
 
   // Output CSV with tokens
   const outputHeaders = [
-    'email', 'phone', 'name', 'firstname', 'lastname',
+    'clientid', 'email', 'phone', 'name', 'firstname', 'lastname',
     'location', 'memberstatus', 'token', 'survey_link'
   ];
 
@@ -150,7 +167,7 @@ async function main() {
 
     const projectId = process.env.FIREBASE_PROJECT_ID;
     const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
     if (!projectId || !clientEmail || !privateKey) {
       console.error('❌ Missing Firebase environment variables:');
@@ -161,6 +178,12 @@ async function main() {
       console.error('Or manually import the CSV via Firebase Console.');
       process.exit(1);
     }
+
+    // Handle private key format
+    if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+      privateKey = privateKey.slice(1, -1);
+    }
+    privateKey = privateKey.replace(/\\n/g, '\n');
 
     // Dynamic import for firebase-admin (ES modules)
     const admin = (await import('firebase-admin')).default;
@@ -176,14 +199,16 @@ async function main() {
     }
 
     const db = admin.firestore();
-    const batch = db.batch();
+    let batch = db.batch();
 
     let batchCount = 0;
     let totalWritten = 0;
 
     for (const invitation of invitations) {
-      const docRef = db.collection('invitations').doc(invitation.token);
+      // Use token (which is clientId or UUID) as document ID
+      const docRef = db.collection('invitations').doc(String(invitation.token));
       batch.set(docRef, {
+        clientId: invitation.clientid || invitation.token,
         email: invitation.email || null,
         phone: invitation.phone || null,
         name: invitation.name || null,
@@ -202,6 +227,7 @@ async function main() {
         await batch.commit();
         totalWritten += batchCount;
         console.log(`   Uploaded ${totalWritten}/${invitations.length}...`);
+        batch = db.batch(); // Create new batch
         batchCount = 0;
       }
     }
@@ -218,7 +244,7 @@ async function main() {
   console.log('\n🎉 Done!\n');
   console.log('Next steps:');
   console.log('1. Open output-with-tokens.csv in Google Sheets');
-  console.log('2. Use GMass or mail merge to send emails with the survey_link column');
+  console.log('2. Use GMass or ClubReady to send emails/texts with the survey_link column');
   if (!shouldUpload) {
     console.log('3. Run with --upload flag to also upload tokens to Firebase');
   }
