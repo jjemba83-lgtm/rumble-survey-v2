@@ -1728,6 +1728,8 @@ export default function RumbleSurveyApp() {
     const userId = params.get('user') || params.get('id') || params.get('email');
 
     // 4. Token-based authentication flow
+    console.log('Token auth config:', { REQUIRE_TOKEN, urlToken });
+
     if (REQUIRE_TOKEN) {
       if (!urlToken) {
         setTokenError('No invitation token provided. Please use the link from your email.');
@@ -1744,8 +1746,12 @@ export default function RumbleSurveyApp() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: urlToken })
       })
-        .then(res => res.json())
+        .then(res => {
+          console.log('Token validation response status:', res.status);
+          return res.json();
+        })
         .then(data => {
+          console.log('Token validation data:', data);
           if (data.valid) {
             // Pre-fill user info from invitation
             setUser(prev => ({
