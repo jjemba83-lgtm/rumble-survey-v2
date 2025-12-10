@@ -1,25 +1,23 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Trophy, MapPin, User, Check, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 
-// --- DATA: NEW RANDOM BLOCKS WITH INVALID MEMBERSHIP DEALS REMOVED (SEE RUMBLE_CBC_DESIGN_README) ---
+// --- DATA: NEW GEMINI HERO ALTERNATIVE COMBINES PRICING AND CLASSES,   CONSOLIDATES AMMENITIES TO SINGLE ATTRIBUTE ---
 // Note: Prices converted from "P_269" format to integer 269 for consistency
 const RAW_DATA = [
   {
     "id": 1,
     "options": [
       {
-        "price": 229,
-        "count": "C_Unl",
-        "booking": "B_14D",
-        "guest": "G_None",
-        "perks": "P_5P"
+        "tier": "T_4",
+        "hero": "H_None",
+        "booking": "B_7D",
+        "commitment": "C_12M"
       },
       {
-        "price": 189,
-        "count": "C_Unl",
-        "booking": "B_10D",
-        "guest": "G_None",
-        "perks": "P_15P"
+        "tier": "T_4",
+        "hero": "H_GUESTS",
+        "booking": "B_14D",
+        "commitment": "C_12M"
       }
     ]
   },
@@ -27,18 +25,16 @@ const RAW_DATA = [
     "id": 2,
     "options": [
       {
-        "price": 229,
-        "count": "C_8",
-        "booking": "B_30D",
-        "guest": "G_2M",
-        "perks": "P_5P"
+        "tier": "T_4",
+        "hero": "H_None",
+        "booking": "B_14D",
+        "commitment": "C_3M"
       },
       {
-        "price": 269,
-        "count": "C_4",
+        "tier": "T_8",
+        "hero": "H_RECOVERY",
         "booking": "B_7D",
-        "guest": "G_1M",
-        "perks": "P_None"
+        "commitment": "C_3M"
       }
     ]
   },
@@ -46,18 +42,16 @@ const RAW_DATA = [
     "id": 3,
     "options": [
       {
-        "price": 229,
-        "count": "C_Unl",
-        "booking": "B_10D",
-        "guest": "G_1M",
-        "perks": "P_10P"
+        "tier": "T_12",
+        "hero": "H_CHILDCARE",
+        "booking": "B_14D",
+        "commitment": "C_6M"
       },
       {
-        "price": 269,
-        "count": "C_Unl",
-        "booking": "B_10D",
-        "guest": "G_1M",
-        "perks": "P_5P"
+        "tier": "T_8",
+        "hero": "H_None",
+        "booking": "B_14D",
+        "commitment": "C_1M"
       }
     ]
   },
@@ -65,18 +59,16 @@ const RAW_DATA = [
     "id": 4,
     "options": [
       {
-        "price": 189,
-        "count": "C_12",
+        "tier": "T_Unl",
+        "hero": "H_GUESTS",
         "booking": "B_14D",
-        "guest": "G_2M",
-        "perks": "P_5P"
+        "commitment": "C_1M"
       },
       {
-        "price": 129,
-        "count": "C_8",
+        "tier": "T_Unl",
+        "hero": "H_None",
         "booking": "B_14D",
-        "guest": "G_1M",
-        "perks": "P_5P"
+        "commitment": "C_1M"
       }
     ]
   },
@@ -84,18 +76,16 @@ const RAW_DATA = [
     "id": 5,
     "options": [
       {
-        "price": 229,
-        "count": "C_8",
-        "booking": "B_10D",
-        "guest": "G_2M",
-        "perks": "P_15P"
+        "tier": "T_4",
+        "hero": "H_None",
+        "booking": "B_30D",
+        "commitment": "C_6M"
       },
       {
-        "price": 229,
-        "count": "C_12",
+        "tier": "T_Unl",
+        "hero": "H_CHILDCARE",
         "booking": "B_30D",
-        "guest": "G_2M",
-        "perks": "P_None"
+        "commitment": "C_12M"
       }
     ]
   },
@@ -103,18 +93,16 @@ const RAW_DATA = [
     "id": 6,
     "options": [
       {
-        "price": 129,
-        "count": "C_8",
-        "booking": "B_10D",
-        "guest": "G_1M",
-        "perks": "P_15P"
+        "tier": "T_12",
+        "hero": "H_RECOVERY",
+        "booking": "B_7D",
+        "commitment": "C_6M"
       },
       {
-        "price": 229,
-        "count": "C_12",
+        "tier": "T_Unl",
+        "hero": "H_GUESTS",
         "booking": "B_30D",
-        "guest": "G_1M",
-        "perks": "P_10P"
+        "commitment": "C_1M"
       }
     ]
   },
@@ -122,18 +110,16 @@ const RAW_DATA = [
     "id": 7,
     "options": [
       {
-        "price": 129,
-        "count": "C_4",
+        "tier": "T_4",
+        "hero": "H_None",
         "booking": "B_30D",
-        "guest": "G_None",
-        "perks": "P_10P"
+        "commitment": "C_3M"
       },
       {
-        "price": 229,
-        "count": "C_12",
-        "booking": "B_10D",
-        "guest": "G_1Q",
-        "perks": "P_None"
+        "tier": "T_4",
+        "hero": "H_GUESTS",
+        "booking": "B_14D",
+        "commitment": "C_6M"
       }
     ]
   },
@@ -141,18 +127,16 @@ const RAW_DATA = [
     "id": 8,
     "options": [
       {
-        "price": 269,
-        "count": "C_Unl",
-        "booking": "B_7D",
-        "guest": "G_2M",
-        "perks": "P_10P"
+        "tier": "T_4",
+        "hero": "H_GUESTS",
+        "booking": "B_30D",
+        "commitment": "C_6M"
       },
       {
-        "price": 269,
-        "count": "C_Unl",
-        "booking": "B_30D",
-        "guest": "G_2M",
-        "perks": "P_None"
+        "tier": "T_4",
+        "hero": "H_GUESTS",
+        "booking": "B_14D",
+        "commitment": "C_3M"
       }
     ]
   },
@@ -160,18 +144,16 @@ const RAW_DATA = [
     "id": 9,
     "options": [
       {
-        "price": 189,
-        "count": "C_4",
-        "booking": "B_7D",
-        "guest": "G_1Q",
-        "perks": "P_None"
+        "tier": "T_8",
+        "hero": "H_None",
+        "booking": "B_30D",
+        "commitment": "C_3M"
       },
       {
-        "price": 229,
-        "count": "C_4",
+        "tier": "T_8",
+        "hero": "H_GUESTS",
         "booking": "B_7D",
-        "guest": "G_2M",
-        "perks": "P_15P"
+        "commitment": "C_1M"
       }
     ]
   },
@@ -179,18 +161,16 @@ const RAW_DATA = [
     "id": 10,
     "options": [
       {
-        "price": 129,
-        "count": "C_8",
-        "booking": "B_14D",
-        "guest": "G_1Q",
-        "perks": "P_15P"
+        "tier": "T_12",
+        "hero": "H_None",
+        "booking": "B_30D",
+        "commitment": "C_3M"
       },
       {
-        "price": 229,
-        "count": "C_4",
-        "booking": "B_14D",
-        "guest": "G_1Q",
-        "perks": "P_5P"
+        "tier": "T_4",
+        "hero": "H_GUESTS",
+        "booking": "B_30D",
+        "commitment": "C_3M"
       }
     ]
   },
@@ -198,18 +178,16 @@ const RAW_DATA = [
     "id": 11,
     "options": [
       {
-        "price": 129,
-        "count": "C_4",
-        "booking": "B_10D",
-        "guest": "G_None",
-        "perks": "P_15P"
+        "tier": "T_8",
+        "hero": "H_None",
+        "booking": "B_14D",
+        "commitment": "C_12M"
       },
       {
-        "price": 189,
-        "count": "C_4",
-        "booking": "B_30D",
-        "guest": "G_1M",
-        "perks": "P_15P"
+        "tier": "T_8",
+        "hero": "H_CHILDCARE",
+        "booking": "B_7D",
+        "commitment": "C_6M"
       }
     ]
   },
@@ -217,18 +195,16 @@ const RAW_DATA = [
     "id": 12,
     "options": [
       {
-        "price": 269,
-        "count": "C_4",
-        "booking": "B_30D",
-        "guest": "G_2M",
-        "perks": "P_10P"
+        "tier": "T_Unl",
+        "hero": "H_CHILDCARE",
+        "booking": "B_7D",
+        "commitment": "C_1M"
       },
       {
-        "price": 129,
-        "count": "C_8",
-        "booking": "B_7D",
-        "guest": "G_1M",
-        "perks": "P_None"
+        "tier": "T_8",
+        "hero": "H_CHILDCARE",
+        "booking": "B_30D",
+        "commitment": "C_12M"
       }
     ]
   },
@@ -236,18 +212,16 @@ const RAW_DATA = [
     "id": 13,
     "options": [
       {
-        "price": 129,
-        "count": "C_4",
+        "tier": "T_Unl",
+        "hero": "H_None",
         "booking": "B_30D",
-        "guest": "G_None",
-        "perks": "P_5P"
+        "commitment": "C_6M"
       },
       {
-        "price": 229,
-        "count": "C_Unl",
-        "booking": "B_7D",
-        "guest": "G_1Q",
-        "perks": "P_15P"
+        "tier": "T_12",
+        "hero": "H_None",
+        "booking": "B_30D",
+        "commitment": "C_1M"
       }
     ]
   },
@@ -255,18 +229,16 @@ const RAW_DATA = [
     "id": 14,
     "options": [
       {
-        "price": 269,
-        "count": "C_12",
-        "booking": "B_30D",
-        "guest": "G_None",
-        "perks": "P_15P"
+        "tier": "T_8",
+        "hero": "H_CHILDCARE",
+        "booking": "B_7D",
+        "commitment": "C_12M"
       },
       {
-        "price": 269,
-        "count": "C_4",
-        "booking": "B_10D",
-        "guest": "G_1M",
-        "perks": "P_5P"
+        "tier": "T_12",
+        "hero": "H_CHILDCARE",
+        "booking": "B_14D",
+        "commitment": "C_12M"
       }
     ]
   },
@@ -274,18 +246,16 @@ const RAW_DATA = [
     "id": 15,
     "options": [
       {
-        "price": 269,
-        "count": "C_12",
-        "booking": "B_10D",
-        "guest": "G_2M",
-        "perks": "P_None"
+        "tier": "T_4",
+        "hero": "H_None",
+        "booking": "B_30D",
+        "commitment": "C_1M"
       },
       {
-        "price": 129,
-        "count": "C_8",
-        "booking": "B_7D",
-        "guest": "G_None",
-        "perks": "P_5P"
+        "tier": "T_8",
+        "hero": "H_RECOVERY",
+        "booking": "B_30D",
+        "commitment": "C_12M"
       }
     ]
   },
@@ -293,18 +263,16 @@ const RAW_DATA = [
     "id": 16,
     "options": [
       {
-        "price": 189,
-        "count": "C_8",
-        "booking": "B_10D",
-        "guest": "G_1Q",
-        "perks": "P_10P"
+        "tier": "T_Unl",
+        "hero": "H_RECOVERY",
+        "booking": "B_14D",
+        "commitment": "C_12M"
       },
       {
-        "price": 269,
-        "count": "C_8",
-        "booking": "B_10D",
-        "guest": "G_None",
-        "perks": "P_10P"
+        "tier": "T_12",
+        "hero": "H_RECOVERY",
+        "booking": "B_7D",
+        "commitment": "C_3M"
       }
     ]
   },
@@ -312,18 +280,16 @@ const RAW_DATA = [
     "id": 17,
     "options": [
       {
-        "price": 189,
-        "count": "C_Unl",
-        "booking": "B_14D",
-        "guest": "G_2M",
-        "perks": "P_10P"
+        "tier": "T_12",
+        "hero": "H_None",
+        "booking": "B_7D",
+        "commitment": "C_12M"
       },
       {
-        "price": 129,
-        "count": "C_4",
-        "booking": "B_7D",
-        "guest": "G_1M",
-        "perks": "P_15P"
+        "tier": "T_12",
+        "hero": "H_CHILDCARE",
+        "booking": "B_30D",
+        "commitment": "C_3M"
       }
     ]
   },
@@ -331,18 +297,16 @@ const RAW_DATA = [
     "id": 18,
     "options": [
       {
-        "price": 189,
-        "count": "C_8",
-        "booking": "B_7D",
-        "guest": "G_2M",
-        "perks": "P_10P"
+        "tier": "T_Unl",
+        "hero": "H_RECOVERY",
+        "booking": "B_30D",
+        "commitment": "C_3M"
       },
       {
-        "price": 269,
-        "count": "C_8",
-        "booking": "B_30D",
-        "guest": "G_1Q",
-        "perks": "P_5P"
+        "tier": "T_4",
+        "hero": "H_None",
+        "booking": "B_14D",
+        "commitment": "C_1M"
       }
     ]
   },
@@ -350,18 +314,16 @@ const RAW_DATA = [
     "id": 19,
     "options": [
       {
-        "price": 269,
-        "count": "C_4",
+        "tier": "T_8",
+        "hero": "H_RECOVERY",
         "booking": "B_14D",
-        "guest": "G_1M",
-        "perks": "P_15P"
+        "commitment": "C_12M"
       },
       {
-        "price": 189,
-        "count": "C_8",
-        "booking": "B_10D",
-        "guest": "G_1Q",
-        "perks": "P_5P"
+        "tier": "T_12",
+        "hero": "H_None",
+        "booking": "B_7D",
+        "commitment": "C_6M"
       }
     ]
   },
@@ -369,18 +331,16 @@ const RAW_DATA = [
     "id": 20,
     "options": [
       {
-        "price": 269,
-        "count": "C_12",
+        "tier": "T_Unl",
+        "hero": "H_CHILDCARE",
         "booking": "B_7D",
-        "guest": "G_None",
-        "perks": "P_5P"
+        "commitment": "C_6M"
       },
       {
-        "price": 129,
-        "count": "C_8",
-        "booking": "B_30D",
-        "guest": "G_None",
-        "perks": "P_None"
+        "tier": "T_Unl",
+        "hero": "H_GUESTS",
+        "booking": "B_14D",
+        "commitment": "C_3M"
       }
     ]
   },
@@ -388,18 +348,16 @@ const RAW_DATA = [
     "id": 21,
     "options": [
       {
-        "price": 129,
-        "count": "C_4",
-        "booking": "B_10D",
-        "guest": "G_1Q",
-        "perks": "P_None"
+        "tier": "T_Unl",
+        "hero": "H_None",
+        "booking": "B_14D",
+        "commitment": "C_3M"
       },
       {
-        "price": 229,
-        "count": "C_4",
+        "tier": "T_Unl",
+        "hero": "H_CHILDCARE",
         "booking": "B_30D",
-        "guest": "G_1Q",
-        "perks": "P_None"
+        "commitment": "C_1M"
       }
     ]
   },
@@ -407,18 +365,16 @@ const RAW_DATA = [
     "id": 22,
     "options": [
       {
-        "price": 189,
-        "count": "C_8",
-        "booking": "B_30D",
-        "guest": "G_1Q",
-        "perks": "P_None"
+        "tier": "T_8",
+        "hero": "H_GUESTS",
+        "booking": "B_14D",
+        "commitment": "C_12M"
       },
       {
-        "price": 189,
-        "count": "C_8",
-        "booking": "B_14D",
-        "guest": "G_1M",
-        "perks": "P_None"
+        "tier": "T_8",
+        "hero": "H_None",
+        "booking": "B_30D",
+        "commitment": "C_1M"
       }
     ]
   },
@@ -426,18 +382,16 @@ const RAW_DATA = [
     "id": 23,
     "options": [
       {
-        "price": 229,
-        "count": "C_Unl",
+        "tier": "T_4",
+        "hero": "H_GUESTS",
         "booking": "B_7D",
-        "guest": "G_1Q",
-        "perks": "P_5P"
+        "commitment": "C_12M"
       },
       {
-        "price": 229,
-        "count": "C_12",
-        "booking": "B_10D",
-        "guest": "G_1M",
-        "perks": "P_10P"
+        "tier": "T_8",
+        "hero": "H_RECOVERY",
+        "booking": "B_7D",
+        "commitment": "C_12M"
       }
     ]
   },
@@ -445,18 +399,16 @@ const RAW_DATA = [
     "id": 24,
     "options": [
       {
-        "price": 129,
-        "count": "C_4",
-        "booking": "B_7D",
-        "guest": "G_1M",
-        "perks": "P_10P"
+        "tier": "T_Unl",
+        "hero": "H_CHILDCARE",
+        "booking": "B_30D",
+        "commitment": "C_6M"
       },
       {
-        "price": 229,
-        "count": "C_12",
-        "booking": "B_7D",
-        "guest": "G_1M",
-        "perks": "P_10P"
+        "tier": "T_8",
+        "hero": "H_GUESTS",
+        "booking": "B_30D",
+        "commitment": "C_3M"
       }
     ]
   },
@@ -464,18 +416,16 @@ const RAW_DATA = [
     "id": 25,
     "options": [
       {
-        "price": 189,
-        "count": "C_12",
-        "booking": "B_7D",
-        "guest": "G_2M",
-        "perks": "P_None"
+        "tier": "T_8",
+        "hero": "H_RECOVERY",
+        "booking": "B_14D",
+        "commitment": "C_6M"
       },
       {
-        "price": 269,
-        "count": "C_8",
+        "tier": "T_12",
+        "hero": "H_None",
         "booking": "B_7D",
-        "guest": "G_None",
-        "perks": "P_15P"
+        "commitment": "C_3M"
       }
     ]
   },
@@ -483,18 +433,16 @@ const RAW_DATA = [
     "id": 26,
     "options": [
       {
-        "price": 129,
-        "count": "C_4",
-        "booking": "B_10D",
-        "guest": "G_2M",
-        "perks": "P_10P"
+        "tier": "T_Unl",
+        "hero": "H_GUESTS",
+        "booking": "B_30D",
+        "commitment": "C_6M"
       },
       {
-        "price": 229,
-        "count": "C_8",
-        "booking": "B_10D",
-        "guest": "G_2M",
-        "perks": "P_5P"
+        "tier": "T_12",
+        "hero": "H_GUESTS",
+        "booking": "B_30D",
+        "commitment": "C_6M"
       }
     ]
   },
@@ -502,18 +450,16 @@ const RAW_DATA = [
     "id": 27,
     "options": [
       {
-        "price": 269,
-        "count": "C_Unl",
-        "booking": "B_10D",
-        "guest": "G_1Q",
-        "perks": "P_15P"
+        "tier": "T_4",
+        "hero": "H_None",
+        "booking": "B_7D",
+        "commitment": "C_6M"
       },
       {
-        "price": 129,
-        "count": "C_8",
+        "tier": "T_Unl",
+        "hero": "H_RECOVERY",
         "booking": "B_30D",
-        "guest": "G_2M",
-        "perks": "P_15P"
+        "commitment": "C_1M"
       }
     ]
   },
@@ -521,18 +467,16 @@ const RAW_DATA = [
     "id": 28,
     "options": [
       {
-        "price": 189,
-        "count": "C_8",
-        "booking": "B_10D",
-        "guest": "G_1M",
-        "perks": "P_None"
+        "tier": "T_12",
+        "hero": "H_CHILDCARE",
+        "booking": "B_14D",
+        "commitment": "C_1M"
       },
       {
-        "price": 189,
-        "count": "C_4",
-        "booking": "B_10D",
-        "guest": "G_None",
-        "perks": "P_5P"
+        "tier": "T_8",
+        "hero": "H_RECOVERY",
+        "booking": "B_30D",
+        "commitment": "C_6M"
       }
     ]
   },
@@ -540,18 +484,16 @@ const RAW_DATA = [
     "id": 29,
     "options": [
       {
-        "price": 189,
-        "count": "C_Unl",
+        "tier": "T_Unl",
+        "hero": "H_GUESTS",
         "booking": "B_30D",
-        "guest": "G_None",
-        "perks": "P_None"
+        "commitment": "C_12M"
       },
       {
-        "price": 189,
-        "count": "C_4",
-        "booking": "B_30D",
-        "guest": "G_2M",
-        "perks": "P_15P"
+        "tier": "T_Unl",
+        "hero": "H_RECOVERY",
+        "booking": "B_7D",
+        "commitment": "C_3M"
       }
     ]
   },
@@ -559,18 +501,16 @@ const RAW_DATA = [
     "id": 30,
     "options": [
       {
-        "price": 189,
-        "count": "C_Unl",
-        "booking": "B_30D",
-        "guest": "G_1M",
-        "perks": "P_10P"
+        "tier": "T_12",
+        "hero": "H_None",
+        "booking": "B_14D",
+        "commitment": "C_3M"
       },
       {
-        "price": 129,
-        "count": "C_4",
-        "booking": "B_10D",
-        "guest": "G_2M",
-        "perks": "P_None"
+        "tier": "T_12",
+        "hero": "H_GUESTS",
+        "booking": "B_7D",
+        "commitment": "C_6M"
       }
     ]
   },
@@ -578,18 +518,16 @@ const RAW_DATA = [
     "id": 31,
     "options": [
       {
-        "price": 269,
-        "count": "C_8",
-        "booking": "B_30D",
-        "guest": "G_1M",
-        "perks": "P_15P"
+        "tier": "T_12",
+        "hero": "H_CHILDCARE",
+        "booking": "B_7D",
+        "commitment": "C_1M"
       },
       {
-        "price": 269,
-        "count": "C_Unl",
+        "tier": "T_12",
+        "hero": "H_CHILDCARE",
         "booking": "B_30D",
-        "guest": "G_1Q",
-        "perks": "P_5P"
+        "commitment": "C_6M"
       }
     ]
   },
@@ -597,18 +535,16 @@ const RAW_DATA = [
     "id": 32,
     "options": [
       {
-        "price": 129,
-        "count": "C_8",
-        "booking": "B_14D",
-        "guest": "G_2M",
-        "perks": "P_5P"
+        "tier": "T_4",
+        "hero": "H_GUESTS",
+        "booking": "B_7D",
+        "commitment": "C_1M"
       },
       {
-        "price": 269,
-        "count": "C_12",
-        "booking": "B_10D",
-        "guest": "G_1M",
-        "perks": "P_None"
+        "tier": "T_8",
+        "hero": "H_None",
+        "booking": "B_7D",
+        "commitment": "C_6M"
       }
     ]
   },
@@ -616,18 +552,16 @@ const RAW_DATA = [
     "id": 33,
     "options": [
       {
-        "price": 189,
-        "count": "C_12",
+        "tier": "T_Unl",
+        "hero": "H_RECOVERY",
         "booking": "B_30D",
-        "guest": "G_1Q",
-        "perks": "P_10P"
+        "commitment": "C_6M"
       },
       {
-        "price": 269,
-        "count": "C_12",
-        "booking": "B_14D",
-        "guest": "G_None",
-        "perks": "P_None"
+        "tier": "T_12",
+        "hero": "H_GUESTS",
+        "booking": "B_7D",
+        "commitment": "C_12M"
       }
     ]
   },
@@ -635,18 +569,16 @@ const RAW_DATA = [
     "id": 34,
     "options": [
       {
-        "price": 129,
-        "count": "C_8",
-        "booking": "B_7D",
-        "guest": "G_1Q",
-        "perks": "P_10P"
+        "tier": "T_12",
+        "hero": "H_RECOVERY",
+        "booking": "B_14D",
+        "commitment": "C_6M"
       },
       {
-        "price": 129,
-        "count": "C_4",
+        "tier": "T_4",
+        "hero": "H_GUESTS",
         "booking": "B_14D",
-        "guest": "G_1Q",
-        "perks": "P_10P"
+        "commitment": "C_1M"
       }
     ]
   },
@@ -654,18 +586,16 @@ const RAW_DATA = [
     "id": 35,
     "options": [
       {
-        "price": 189,
-        "count": "C_4",
+        "tier": "T_12",
+        "hero": "H_CHILDCARE",
         "booking": "B_7D",
-        "guest": "G_1M",
-        "perks": "P_5P"
+        "commitment": "C_3M"
       },
       {
-        "price": 189,
-        "count": "C_Unl",
-        "booking": "B_7D",
-        "guest": "G_2M",
-        "perks": "P_15P"
+        "tier": "T_12",
+        "hero": "H_RECOVERY",
+        "booking": "B_30D",
+        "commitment": "C_12M"
       }
     ]
   },
@@ -673,18 +603,16 @@ const RAW_DATA = [
     "id": 36,
     "options": [
       {
-        "price": 189,
-        "count": "C_Unl",
+        "tier": "T_8",
+        "hero": "H_GUESTS",
         "booking": "B_14D",
-        "guest": "G_1M",
-        "perks": "P_None"
+        "commitment": "C_1M"
       },
       {
-        "price": 189,
-        "count": "C_Unl",
-        "booking": "B_10D",
-        "guest": "G_None",
-        "perks": "P_10P"
+        "tier": "T_12",
+        "hero": "H_RECOVERY",
+        "booking": "B_14D",
+        "commitment": "C_12M"
       }
     ]
   },
@@ -692,18 +620,16 @@ const RAW_DATA = [
     "id": 37,
     "options": [
       {
-        "price": 269,
-        "count": "C_Unl",
-        "booking": "B_14D",
-        "guest": "G_1M",
-        "perks": "P_None"
+        "tier": "T_12",
+        "hero": "H_RECOVERY",
+        "booking": "B_7D",
+        "commitment": "C_1M"
       },
       {
-        "price": 189,
-        "count": "C_Unl",
+        "tier": "T_4",
+        "hero": "H_None",
         "booking": "B_14D",
-        "guest": "G_None",
-        "perks": "P_15P"
+        "commitment": "C_12M"
       }
     ]
   },
@@ -711,18 +637,16 @@ const RAW_DATA = [
     "id": 38,
     "options": [
       {
-        "price": 269,
-        "count": "C_12",
-        "booking": "B_14D",
-        "guest": "G_1Q",
-        "perks": "P_10P"
+        "tier": "T_8",
+        "hero": "H_CHILDCARE",
+        "booking": "B_7D",
+        "commitment": "C_1M"
       },
       {
-        "price": 229,
-        "count": "C_12",
+        "tier": "T_12",
+        "hero": "H_GUESTS",
         "booking": "B_14D",
-        "guest": "G_1M",
-        "perks": "P_15P"
+        "commitment": "C_6M"
       }
     ]
   },
@@ -730,18 +654,16 @@ const RAW_DATA = [
     "id": 39,
     "options": [
       {
-        "price": 189,
-        "count": "C_4",
+        "tier": "T_Unl",
+        "hero": "H_CHILDCARE",
         "booking": "B_14D",
-        "guest": "G_1Q",
-        "perks": "P_15P"
+        "commitment": "C_3M"
       },
       {
-        "price": 229,
-        "count": "C_4",
+        "tier": "T_Unl",
+        "hero": "H_RECOVERY",
         "booking": "B_14D",
-        "guest": "G_None",
-        "perks": "P_None"
+        "commitment": "C_1M"
       }
     ]
   },
@@ -749,18 +671,16 @@ const RAW_DATA = [
     "id": 40,
     "options": [
       {
-        "price": 269,
-        "count": "C_8",
-        "booking": "B_7D",
-        "guest": "G_1Q",
-        "perks": "P_15P"
+        "tier": "T_4",
+        "hero": "H_GUESTS",
+        "booking": "B_30D",
+        "commitment": "C_1M"
       },
       {
-        "price": 229,
-        "count": "C_Unl",
-        "booking": "B_7D",
-        "guest": "G_2M",
-        "perks": "P_5P"
+        "tier": "T_12",
+        "hero": "H_GUESTS",
+        "booking": "B_14D",
+        "commitment": "C_3M"
       }
     ]
   },
@@ -768,18 +688,16 @@ const RAW_DATA = [
     "id": 41,
     "options": [
       {
-        "price": 269,
-        "count": "C_12",
-        "booking": "B_7D",
-        "guest": "G_1Q",
-        "perks": "P_10P"
+        "tier": "T_12",
+        "hero": "H_RECOVERY",
+        "booking": "B_30D",
+        "commitment": "C_3M"
       },
       {
-        "price": 269,
-        "count": "C_4",
-        "booking": "B_14D",
-        "guest": "G_2M",
-        "perks": "P_5P"
+        "tier": "T_Unl",
+        "hero": "H_RECOVERY",
+        "booking": "B_7D",
+        "commitment": "C_12M"
       }
     ]
   },
@@ -787,18 +705,16 @@ const RAW_DATA = [
     "id": 42,
     "options": [
       {
-        "price": 129,
-        "count": "C_8",
+        "tier": "T_4",
+        "hero": "H_None",
         "booking": "B_14D",
-        "guest": "G_2M",
-        "perks": "P_None"
+        "commitment": "C_6M"
       },
       {
-        "price": 229,
-        "count": "C_Unl",
-        "booking": "B_30D",
-        "guest": "G_1M",
-        "perks": "P_5P"
+        "tier": "T_8",
+        "hero": "H_None",
+        "booking": "B_7D",
+        "commitment": "C_3M"
       }
     ]
   },
@@ -806,18 +722,16 @@ const RAW_DATA = [
     "id": 43,
     "options": [
       {
-        "price": 189,
-        "count": "C_12",
-        "booking": "B_30D",
-        "guest": "G_None",
-        "perks": "P_15P"
+        "tier": "T_Unl",
+        "hero": "H_RECOVERY",
+        "booking": "B_14D",
+        "commitment": "C_3M"
       },
       {
-        "price": 229,
-        "count": "C_8",
+        "tier": "T_12",
+        "hero": "H_RECOVERY",
         "booking": "B_30D",
-        "guest": "G_1M",
-        "perks": "P_10P"
+        "commitment": "C_1M"
       }
     ]
   },
@@ -825,18 +739,16 @@ const RAW_DATA = [
     "id": 44,
     "options": [
       {
-        "price": 229,
-        "count": "C_12",
-        "booking": "B_14D",
-        "guest": "G_1Q",
-        "perks": "P_15P"
+        "tier": "T_4",
+        "hero": "H_None",
+        "booking": "B_30D",
+        "commitment": "C_12M"
       },
       {
-        "price": 229,
-        "count": "C_12",
-        "booking": "B_10D",
-        "guest": "G_2M",
-        "perks": "P_15P"
+        "tier": "T_8",
+        "hero": "H_GUESTS",
+        "booking": "B_7D",
+        "commitment": "C_6M"
       }
     ]
   },
@@ -844,18 +756,16 @@ const RAW_DATA = [
     "id": 45,
     "options": [
       {
-        "price": 189,
-        "count": "C_12",
-        "booking": "B_14D",
-        "guest": "G_1M",
-        "perks": "P_5P"
+        "tier": "T_8",
+        "hero": "H_CHILDCARE",
+        "booking": "B_30D",
+        "commitment": "C_3M"
       },
       {
-        "price": 269,
-        "count": "C_Unl",
-        "booking": "B_10D",
-        "guest": "G_1Q",
-        "perks": "P_None"
+        "tier": "T_12",
+        "hero": "H_GUESTS",
+        "booking": "B_30D",
+        "commitment": "C_12M"
       }
     ]
   },
@@ -863,18 +773,16 @@ const RAW_DATA = [
     "id": 46,
     "options": [
       {
-        "price": 269,
-        "count": "C_8",
-        "booking": "B_14D",
-        "guest": "G_None",
-        "perks": "P_10P"
+        "tier": "T_8",
+        "hero": "H_RECOVERY",
+        "booking": "B_7D",
+        "commitment": "C_1M"
       },
       {
-        "price": 229,
-        "count": "C_Unl",
-        "booking": "B_14D",
-        "guest": "G_1Q",
-        "perks": "P_None"
+        "tier": "T_Unl",
+        "hero": "H_GUESTS",
+        "booking": "B_7D",
+        "commitment": "C_12M"
       }
     ]
   },
@@ -882,18 +790,16 @@ const RAW_DATA = [
     "id": 47,
     "options": [
       {
-        "price": 229,
-        "count": "C_8",
+        "tier": "T_12",
+        "hero": "H_RECOVERY",
         "booking": "B_14D",
-        "guest": "G_None",
-        "perks": "P_10P"
+        "commitment": "C_1M"
       },
       {
-        "price": 129,
-        "count": "C_4",
+        "tier": "T_Unl",
+        "hero": "H_None",
         "booking": "B_30D",
-        "guest": "G_1Q",
-        "perks": "P_5P"
+        "commitment": "C_12M"
       }
     ]
   },
@@ -901,18 +807,16 @@ const RAW_DATA = [
     "id": 48,
     "options": [
       {
-        "price": 229,
-        "count": "C_8",
-        "booking": "B_7D",
-        "guest": "G_None",
-        "perks": "P_None"
+        "tier": "T_8",
+        "hero": "H_GUESTS",
+        "booking": "B_30D",
+        "commitment": "C_1M"
       },
       {
-        "price": 189,
-        "count": "C_12",
-        "booking": "B_7D",
-        "guest": "G_None",
-        "perks": "P_5P"
+        "tier": "T_Unl",
+        "hero": "H_CHILDCARE",
+        "booking": "B_14D",
+        "commitment": "C_6M"
       }
     ]
   },
@@ -920,18 +824,16 @@ const RAW_DATA = [
     "id": 49,
     "options": [
       {
-        "price": 269,
-        "count": "C_4",
+        "tier": "T_8",
+        "hero": "H_CHILDCARE",
         "booking": "B_14D",
-        "guest": "G_2M",
-        "perks": "P_10P"
+        "commitment": "C_1M"
       },
       {
-        "price": 189,
-        "count": "C_12",
-        "booking": "B_10D",
-        "guest": "G_1Q",
-        "perks": "P_5P"
+        "tier": "T_8",
+        "hero": "H_GUESTS",
+        "booking": "B_14D",
+        "commitment": "C_3M"
       }
     ]
   },
@@ -939,18 +841,186 @@ const RAW_DATA = [
     "id": 50,
     "options": [
       {
-        "price": 229,
-        "count": "C_4",
-        "booking": "B_10D",
-        "guest": "G_None",
-        "perks": "P_10P"
+        "tier": "T_4",
+        "hero": "H_GUESTS",
+        "booking": "B_7D",
+        "commitment": "C_3M"
       },
       {
-        "price": 229,
-        "count": "C_4",
+        "tier": "T_12",
+        "hero": "H_GUESTS",
         "booking": "B_7D",
-        "guest": "G_None",
-        "perks": "P_None"
+        "commitment": "C_1M"
+      }
+    ]
+  },
+  {
+    "id": 51,
+    "options": [
+      {
+        "tier": "T_Unl",
+        "hero": "H_CHILDCARE",
+        "booking": "B_7D",
+        "commitment": "C_3M"
+      },
+      {
+        "tier": "T_12",
+        "hero": "H_CHILDCARE",
+        "booking": "B_30D",
+        "commitment": "C_12M"
+      }
+    ]
+  },
+  {
+    "id": 52,
+    "options": [
+      {
+        "tier": "T_Unl",
+        "hero": "H_CHILDCARE",
+        "booking": "B_7D",
+        "commitment": "C_12M"
+      },
+      {
+        "tier": "T_Unl",
+        "hero": "H_None",
+        "booking": "B_7D",
+        "commitment": "C_1M"
+      }
+    ]
+  },
+  {
+    "id": 53,
+    "options": [
+      {
+        "tier": "T_4",
+        "hero": "H_GUESTS",
+        "booking": "B_7D",
+        "commitment": "C_6M"
+      },
+      {
+        "tier": "T_Unl",
+        "hero": "H_RECOVERY",
+        "booking": "B_14D",
+        "commitment": "C_6M"
+      }
+    ]
+  },
+  {
+    "id": 54,
+    "options": [
+      {
+        "tier": "T_Unl",
+        "hero": "H_GUESTS",
+        "booking": "B_7D",
+        "commitment": "C_3M"
+      },
+      {
+        "tier": "T_8",
+        "hero": "H_None",
+        "booking": "B_30D",
+        "commitment": "C_6M"
+      }
+    ]
+  },
+  {
+    "id": 55,
+    "options": [
+      {
+        "tier": "T_4",
+        "hero": "H_None",
+        "booking": "B_7D",
+        "commitment": "C_1M"
+      },
+      {
+        "tier": "T_8",
+        "hero": "H_CHILDCARE",
+        "booking": "B_14D",
+        "commitment": "C_12M"
+      }
+    ]
+  },
+  {
+    "id": 56,
+    "options": [
+      {
+        "tier": "T_8",
+        "hero": "H_CHILDCARE",
+        "booking": "B_14D",
+        "commitment": "C_3M"
+      },
+      {
+        "tier": "T_Unl",
+        "hero": "H_None",
+        "booking": "B_7D",
+        "commitment": "C_12M"
+      }
+    ]
+  },
+  {
+    "id": 57,
+    "options": [
+      {
+        "tier": "T_4",
+        "hero": "H_None",
+        "booking": "B_7D",
+        "commitment": "C_3M"
+      },
+      {
+        "tier": "T_12",
+        "hero": "H_None",
+        "booking": "B_14D",
+        "commitment": "C_12M"
+      }
+    ]
+  },
+  {
+    "id": 58,
+    "options": [
+      {
+        "tier": "T_12",
+        "hero": "H_CHILDCARE",
+        "booking": "B_30D",
+        "commitment": "C_1M"
+      },
+      {
+        "tier": "T_4",
+        "hero": "H_GUESTS",
+        "booking": "B_30D",
+        "commitment": "C_12M"
+      }
+    ]
+  },
+  {
+    "id": 59,
+    "options": [
+      {
+        "tier": "T_8",
+        "hero": "H_RECOVERY",
+        "booking": "B_30D",
+        "commitment": "C_3M"
+      },
+      {
+        "tier": "T_8",
+        "hero": "H_CHILDCARE",
+        "booking": "B_14D",
+        "commitment": "C_6M"
+      }
+    ]
+  },
+  {
+    "id": 60,
+    "options": [
+      {
+        "tier": "T_8",
+        "hero": "H_RECOVERY",
+        "booking": "B_7D",
+        "commitment": "C_6M"
+      },
+      {
+        "tier": "T_Unl",
+        "hero": "H_None",
+        "booking": "B_14D",
+        "commitment": "C_6M"
       }
     ]
   }
@@ -959,11 +1029,10 @@ const RAW_DATA = [
 // Helper to decode CSV-style codes to Human Readable text
 const decode = (code, type) => {
   const map = {
-    price: { 129: '$129', 189: '$189', 229: '$229', 269: '$269' },
-    count: { 'C_4': '4 Classes/mo', 'C_8': '8 Classes/mo', 'C_12': '12 Classes/mo', 'C_Unl': 'Unlimited Classes' },
-    booking: { 'B_7D': '7-Day Booking', 'B_10D': '10-Day Booking', 'B_14D': '14-Day Booking', 'B_30D': '30-Day Booking' },
-    guest: { 'G_None': 'No Guest Passes', 'G_1Q': '1 Guest Pass / Quarter', 'G_1M': '1 Guest Pass / Month', 'G_2M': '2 Guest Passes / Month' },
-    perks: { 'P_None': 'No Perks', 'P_5P': '5% Retail Discount', 'P_10P': '10% Off + Free Glove Rental', 'P_15P': '15% Off + Elite Status' }
+    tier: { T_4: '$119 (4 Classes/Month)', T_8: '$179 (8 Classes/Month)', T_12: '$219 (12 Classes/Month)', T_Unl: '$249 (Unlimitted Classes)' },
+    hero: { 'H_None': 'No Perks :(', 'H_GUESTS': '2 Guest Passes/Month!', 'H_RECOVERY': 'Recovery Lounge Access!', 'H_CHILDCARE': 'Childcare while you exercise!' },
+    booking: { 'B_7D': '7-Day Booking', 'B_14D': '14-Day Booking', 'B_30D': '30-Day Booking' },
+    commitment: { 'C_1M': 'Month to Month', 'C_3M': '3 Month Term', 'C_6M': '6 Month Term', 'C_12M': '12 Month Term' },
   };
   return map[type][code] || code;
 };
