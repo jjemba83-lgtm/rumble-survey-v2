@@ -29,17 +29,11 @@ export default async function handler(req, res) {
     const db = getFirestoreDb();
 
     if (!db) {
-      console.error('Firebase not configured - returning mock response for testing');
-      // Mock mode for testing without Firebase
-      return res.status(200).json({
-        valid: true,
-        mock: true,
-        client: {
-          email: 'test@example.com',
-          name: 'Test User',
-          location: 'Montclair',
-        },
-        message: 'Mock mode - Firebase not configured'
+      console.error('Firebase not configured - rejecting token validation');
+      // Fail secure: if Firebase isn't configured, don't allow access
+      return res.status(503).json({
+        valid: false,
+        error: 'Survey system is not properly configured. Please contact support.'
       });
     }
 
