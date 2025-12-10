@@ -25,9 +25,16 @@ export default async function handler(req, res) {
 
     const apiKey = process.env.OPENAI_API_KEY;
 
+    // If no API key, return a mock response for testing
     if (!apiKey) {
-      console.error('OPENAI_API_KEY not configured');
-      return res.status(500).json({ error: 'API not configured' });
+      console.log('OPENAI_API_KEY not configured - returning mock response');
+      const mockInsight = generateInsight(patterns);
+      return res.status(200).json({
+        question: "Based on your choices, what's the ONE thing that would make you upgrade to a higher tier membership?",
+        insight: mockInsight,
+        patterns: patterns,
+        mock: true
+      });
     }
 
     // Build the prompt with CBC pattern analysis
