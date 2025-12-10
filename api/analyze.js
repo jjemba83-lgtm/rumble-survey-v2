@@ -1,5 +1,15 @@
 // Vercel Serverless Function - Generates personalized follow-up question based on CBC patterns
-// Environment variable required: OPENAI_API_KEY (set in Vercel Dashboard)
+// Environment variable required: OPENAI_API_KEY (set in Vercel Dashboard or .env.local for local dev)
+
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+// Load .env.local for local development
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+dotenv.config({ path: resolve(__dirname, '../.env.local') });
+dotenv.config({ path: resolve(__dirname, '../.env') });
 
 export default async function handler(req, res) {
   // Only allow POST requests
@@ -24,6 +34,10 @@ export default async function handler(req, res) {
     }
 
     const apiKey = process.env.OPENAI_API_KEY;
+
+    // Debug logging
+    console.log('API Key exists:', !!apiKey);
+    console.log('API Key starts with:', apiKey ? apiKey.substring(0, 10) + '...' : 'N/A');
 
     // If no API key, return a mock response for testing
     if (!apiKey) {
